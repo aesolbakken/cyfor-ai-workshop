@@ -1,11 +1,19 @@
-# Welcome to [Slidev](https://github.com/slidevjs/slidev)!
+# Cyfor Workshop – Slides
 
-To start the slide show:
+Reveal.js presentation with Sopra Steria branding.
 
-- `pnpm install`
-- `pnpm dev`
-- visit <http://localhost:3030>
+## Quick start
 
-Edit the [slides.md](./slides.md) to see the changes.
+```bash
+npx serve . -l 3030
+```
 
-Learn more about Slidev at the [documentation](https://sli.dev/).
+Then open <http://localhost:3030>.
+
+## Speaker notes
+
+Press **S** to open the speaker-notes window.
+
+## Export to PDF
+
+Open `http://localhost:3030?print-pdf` in Chrome and use **Print → Save as PDF**.
