@@ -112,18 +112,30 @@ export default function App() {
     deleteMutation.mutate({ id });
   };
 
+  const inputClass =
+    "rounded-md border border-border px-3 py-2 text-sm text-text outline-none focus:border-primary-light";
+  const inputSmClass =
+    "rounded-md border border-border px-3 py-1.5 text-sm text-text outline-none focus:border-primary-light";
+  const btnPrimary =
+    "rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-border";
+  const btnSecondary =
+    "rounded-md border border-border px-3 py-1 text-sm text-text-muted disabled:cursor-not-allowed disabled:border-border disabled:text-border";
+
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
-      <div className="mx-auto max-w-xl space-y-6">
-        <header className="space-y-2">
-          <h1 className="text-2xl font-semibold">Resource Manager</h1>
-          <p className="text-sm text-slate-600">
+    <main className="min-h-screen bg-bg px-4 py-10 text-text">
+      <div className="mx-auto max-w-2xl space-y-8">
+        <header className="space-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight text-primary">
+            Resource Manager
+          </h1>
+          <p className="text-sm text-text-muted">
             Create, edit, and manage bookable resources.
           </p>
         </header>
 
+        {/* Create form */}
         <form
-          className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+          className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5"
           onSubmit={handleSubmit}
         >
           <input
@@ -131,20 +143,20 @@ export default function App() {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Resource title"
             maxLength={120}
-            className="rounded-md border border-slate-300 px-3 py-2 text-base outline-none focus:border-slate-500"
+            className={inputClass}
           />
           <input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description (optional)"
             maxLength={500}
-            className="rounded-md border border-slate-300 px-3 py-2 text-base outline-none focus:border-slate-500"
+            className={inputClass}
           />
           <div className="flex gap-3">
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-base outline-none focus:border-slate-500"
+              className={`flex-1 ${inputClass}`}
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
@@ -155,45 +167,47 @@ export default function App() {
             <button
               type="submit"
               disabled={!trimmedTitle || createMutation.isPending}
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+              className={btnPrimary}
             >
               {createMutation.isPending ? "Adding..." : "Add resource"}
             </button>
           </div>
         </form>
 
+        {/* Error messages */}
         {createMutation.isError && (
-          <p className="text-sm text-rose-600">
+          <p className="text-sm text-danger">
             Could not add the resource: {createMutation.error.message}
           </p>
         )}
-
         {updateMutation.isError && (
-          <p className="text-sm text-rose-600">
+          <p className="text-sm text-danger">
             Could not update the resource: {updateMutation.error.message}
           </p>
         )}
-
         {deleteMutation.isError && (
-          <p className="text-sm text-rose-600">
+          <p className="text-sm text-danger">
             Could not remove the resource: {deleteMutation.error.message}
           </p>
         )}
 
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="text-sm font-medium text-slate-700">Resources</h2>
+        {/* Resource list */}
+        <section className="rounded-lg border border-border bg-surface p-5">
+          <h2 className="text-sm font-medium text-text-muted uppercase tracking-wide">
+            Resources
+          </h2>
 
-          <div className="mt-3 flex gap-3">
+          <div className="mt-4 flex gap-3">
             <input
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               placeholder="Search resources..."
-              className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm outline-none focus:border-slate-500"
+              className={`flex-1 ${inputSmClass}`}
             />
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm outline-none focus:border-slate-500"
+              className={inputSmClass}
             >
               <option value="">All categories</option>
               {CATEGORIES.map((cat) => (
@@ -205,21 +219,23 @@ export default function App() {
           </div>
 
           {resourcesQuery.isPending && (
-            <p className="mt-3 text-sm text-slate-600">Loading resources...</p>
+            <p className="mt-4 text-sm text-text-muted">
+              Loading resources...
+            </p>
           )}
 
           {resourcesQuery.isError && (
-            <p className="mt-3 text-sm text-rose-600">
+            <p className="mt-4 text-sm text-danger">
               Could not load resources: {resourcesQuery.error.message}
             </p>
           )}
 
           {!resourcesQuery.isPending && !resourcesQuery.isError ? (
             resources.length > 0 ? (
-              <ul className="mt-3 divide-y divide-slate-200">
+              <ul className="mt-4 divide-y divide-border">
                 {resources.map((resource) =>
                   editingId === resource.id ? (
-                    <li key={resource.id} className="py-3">
+                    <li key={resource.id} className="py-4">
                       <form
                         className="flex flex-col gap-2"
                         onSubmit={handleUpdate}
@@ -228,19 +244,19 @@ export default function App() {
                           value={editTitle}
                           onChange={(e) => setEditTitle(e.target.value)}
                           maxLength={120}
-                          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm outline-none focus:border-slate-500"
+                          className={inputSmClass}
                         />
                         <input
                           value={editDescription}
                           onChange={(e) => setEditDescription(e.target.value)}
                           maxLength={500}
                           placeholder="Description"
-                          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm outline-none focus:border-slate-500"
+                          className={inputSmClass}
                         />
                         <select
                           value={editCategory}
                           onChange={(e) => setEditCategory(e.target.value)}
-                          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm outline-none focus:border-slate-500"
+                          className={inputSmClass}
                         >
                           {CATEGORIES.map((cat) => (
                             <option key={cat} value={cat}>
@@ -254,14 +270,14 @@ export default function App() {
                             disabled={
                               !editTitle.trim() || updateMutation.isPending
                             }
-                            className="rounded-md bg-slate-900 px-3 py-1 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300"
+                            className={btnPrimary}
                           >
                             {updateMutation.isPending ? "Saving..." : "Save"}
                           </button>
                           <button
                             type="button"
                             onClick={cancelEdit}
-                            className="rounded-md border border-slate-300 px-3 py-1 text-sm text-slate-700"
+                            className={btnSecondary}
                           >
                             Cancel
                           </button>
@@ -271,17 +287,19 @@ export default function App() {
                   ) : (
                     <li
                       key={resource.id}
-                      className="flex items-start justify-between gap-3 py-3"
+                      className="flex items-start justify-between gap-3 py-4"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">{resource.title}</span>
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                          <span className="font-medium text-text">
+                            {resource.title}
+                          </span>
+                          <span className="rounded-full bg-badge-bg px-2 py-0.5 text-xs font-medium text-success">
                             {categoryLabel(resource.category)}
                           </span>
                         </div>
                         {resource.description && (
-                          <p className="mt-1 text-sm text-slate-500">
+                          <p className="mt-1 text-sm text-text-muted">
                             {resource.description}
                           </p>
                         )}
@@ -290,7 +308,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => startEdit(resource)}
-                          className="rounded-md border border-slate-300 px-3 py-1 text-sm text-slate-700"
+                          className={btnSecondary}
                         >
                           Edit
                         </button>
@@ -298,7 +316,7 @@ export default function App() {
                           type="button"
                           onClick={() => handleRemove(resource.id)}
                           disabled={deleteMutation.isPending}
-                          className="rounded-md border border-slate-300 px-3 py-1 text-sm text-slate-700 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+                          className={`${btnSecondary} hover:border-danger hover:text-danger`}
                         >
                           {deleteMutation.isPending &&
                           deletingId === resource.id
@@ -311,7 +329,7 @@ export default function App() {
                 )}
               </ul>
             ) : (
-              <p className="mt-3 text-sm text-slate-600">
+              <p className="mt-4 text-sm text-text-muted">
                 {searchText.trim() || filterCategory
                   ? "No resources match your filters."
                   : "No resources yet."}

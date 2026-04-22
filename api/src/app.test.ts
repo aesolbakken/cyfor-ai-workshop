@@ -74,6 +74,11 @@ describe('GET /resources', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body).toEqual({ resources: [] })
+
+    expect(prismaMock.resource.findMany).toHaveBeenCalledWith({
+      where: {},
+      orderBy: { createdAt: 'desc' }
+    })
   })
 
   it('returns resources with all fields', async () => {
