@@ -149,6 +149,88 @@
             ]
           }
         }
+      },
+      "Reservation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "resourceId": {
+            "type": "integer",
+            "example": 1
+          },
+          "bookedBy": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "example": "Alice"
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-01T09:00:00.000Z"
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-01T10:00:00.000Z"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-01T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "resourceId",
+          "bookedBy",
+          "startTime",
+          "endTime",
+          "createdAt"
+        ]
+      },
+      "ReservationListResponse": {
+        "type": "object",
+        "properties": {
+          "reservations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reservation"
+            }
+          }
+        },
+        "required": [
+          "reservations"
+        ]
+      },
+      "CreateReservation": {
+        "type": "object",
+        "properties": {
+          "bookedBy": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "example": "Alice"
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-01T09:00:00.000Z"
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-06-01T10:00:00.000Z"
+          }
+        },
+        "required": [
+          "bookedBy",
+          "startTime",
+          "endTime"
+        ]
       }
     },
     "parameters": {}
@@ -321,6 +403,118 @@
         "responses": {
           "204": {
             "description": "Remove a resource"
+          }
+        }
+      }
+    },
+    "/resources/{id}/reservations": {
+      "get": {
+        "tags": [
+          "Reservations"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "example": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List all reservations for a resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Reservations"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "example": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReservation"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Reservation created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reservation"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Overlapping reservation exists"
+          },
+          "422": {
+            "description": "Validation error (duration too short or start time in the past)"
+          }
+        }
+      }
+    },
+    "/reservations/{id}": {
+      "delete": {
+        "tags": [
+          "Reservations"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "example": 1
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Reservation deleted"
+          },
+          "404": {
+            "description": "Reservation not found"
           }
         }
       }

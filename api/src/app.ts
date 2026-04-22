@@ -193,6 +193,87 @@ const deleteResourceRoute = createRoute({
   }
 })
 
+// --- Reservation schemas ---
+
+const ReservationSchema = z.object({
+  id: z.number().int().openapi({ example: 1 }),
+  resourceId: z.number().int().openapi({ example: 1 }),
+  bookedBy: z.string().min(1).max(120).openapi({ example: 'Alice' }),
+  startTime: z.string().datetime().openapi({ example: '2025-06-01T09:00:00.000Z' }),
+  endTime: z.string().datetime().openapi({ example: '2025-06-01T10:00:00.000Z' }),
+  createdAt: z.string().datetime().openapi({ example: '2024-01-01T00:00:00.000Z' })
+}).openapi('Reservation')
+
+const ReservationListResponseSchema = z.object({
+  reservations: z.array(ReservationSchema)
+}).openapi('ReservationListResponse')
+
+const CreateReservationSchema = z.object({
+  bookedBy: z.string().trim().min(1).max(120).openapi({ example: 'Alice' }),
+  startTime: z.string().datetime().openapi({ example: '2025-06-01T09:00:00.000Z' }),
+  endTime: z.string().datetime().openapi({ example: '2025-06-01T10:00:00.000Z' })
+}).openapi('CreateReservation')
+
+const ReservationParamsSchema = z.object({
+  id: z.coerce.number().int().positive().openapi({
+    param: { name: 'id', in: 'path' },
+    example: 1
+  })
+}).openapi('ReservationParams')
+
+// --- Reservation routes ---
+
+const listReservationsRoute = createRoute({
+  method: 'get',
+  path: '/resources/{id}/reservations',
+  tags: ['Reservations'],
+  request: {
+    params: ResourceParamsSchema
+  },
+  responses: {
+    200: {
+      description: 'List all reservations for a resource',
+      content: { 'application/json': { schema: ReservationListResponseSchema } }
+    },
+    404: { description: 'Resource not found' }
+  }
+})
+
+const createReservationRoute = createRoute({
+  method: 'post',
+  path: '/resources/{id}/reservations',
+  tags: ['Reservations'],
+  request: {
+    params: ResourceParamsSchema,
+    body: {
+      required: true,
+      content: { 'application/json': { schema: CreateReservationSchema } }
+    }
+  },
+  responses: {
+    201: {
+      description: 'Reservation created',
+      content: { 'application/json': { schema: ReservationSchema } }
+    },
+    404: { description: 'Resource not found' },
+    409: { description: 'Overlapping reservation exists' },
+    422: { description: 'Validation error (duration too short or start time in the past)' }
+  }
+})
+
+const deleteReservationRoute = createRoute({
+  method: 'delete',
+  path: '/reservations/{id}',
+  tags: ['Reservations'],
+  request: {
+    params: ReservationParamsSchema
+  },
+  responses: {
+    204: { description: 'Reservation deleted' },
+    404: { description: 'Reservation not found' }
+  }
+})
+
 type CategoryValue = z.infer<typeof CategoryEnum>
 
 const toResourceResponse = (resource: {
@@ -313,6 +394,112 @@ app.openapi(deleteResourceRoute, async (c) => {
       id
     }
   })
+
+  return c.body(null, 204)
+})
+
+// --- Reservation helpers ---
+
+const toReservationResponse = (r: {
+  id: number
+  resourceId: number
+  bookedBy: string
+  startTime: Date
+  endTime: Date
+  createdAt: Date
+}) => ({
+  id: r.id,
+  resourceId: r.resourceId,
+  bookedBy: r.bookedBy,
+  startTime: r.startTime.toISOString(),
+  endTime: r.endTime.toISOString(),
+  createdAt: r.createdAt.toISOString()
+})
+
+const THIRTY_MINUTES_MS = 30 * 60 * 1000
+
+// --- Reservation handlers ---
+
+app.openapi(listReservationsRoute, async (c) => {
+  const { id } = c.req.valid('param')
+
+  const resource = await prisma.resource.findUnique({ where: { id } })
+  if (!resource) {
+    return c.body(null, 404)
+  }
+
+  const reservations = await prisma.reservation.findMany({
+    where: { resourceId: id },
+    orderBy: { startTime: 'asc' }
+  })
+
+  return c.json({
+    reservations: reservations.map(toReservationResponse)
+  }, 200)
+})
+
+app.openapi(createReservationRoute, async (c) => {
+  const { id } = c.req.valid('param')
+  const { bookedBy, startTime: startStr, endTime: endStr } = c.req.valid('json')
+
+  const startTime = new Date(startStr)
+  const endTime = new Date(endStr)
+
+  // Validate: end must be after start
+  if (endTime.getTime() <= startTime.getTime()) {
+    return c.json({ error: 'endTime must be after startTime' }, 422)
+  }
+
+  // Validate: minimum 30 minutes
+  if (endTime.getTime() - startTime.getTime() < THIRTY_MINUTES_MS) {
+    return c.json({ error: 'Reservation must be at least 30 minutes' }, 422)
+  }
+
+  // Validate: start must be in the future
+  if (startTime.getTime() <= Date.now()) {
+    return c.json({ error: 'startTime must be in the future' }, 422)
+  }
+
+  // Check resource exists
+  const resource = await prisma.resource.findUnique({ where: { id } })
+  if (!resource) {
+    return c.body(null, 404)
+  }
+
+  // Check for overlapping reservations (strict inequality — touching slots are OK)
+  const overlap = await prisma.reservation.findFirst({
+    where: {
+      resourceId: id,
+      startTime: { lt: endTime },
+      endTime: { gt: startTime }
+    }
+  })
+
+  if (overlap) {
+    return c.json({ error: 'Overlapping reservation exists' }, 409)
+  }
+
+  const reservation = await prisma.reservation.create({
+    data: {
+      resourceId: id,
+      bookedBy,
+      startTime,
+      endTime
+    }
+  })
+
+  return c.json(toReservationResponse(reservation), 201)
+})
+
+app.openapi(deleteReservationRoute, async (c) => {
+  const { id } = c.req.valid('param')
+
+  const existing = await prisma.reservation.findUnique({ where: { id } })
+  if (!existing) {
+    return c.body(null, 404)
+  }
+
+  await prisma.reservation.delete({ where: { id } })
 
   return c.body(null, 204)
 })

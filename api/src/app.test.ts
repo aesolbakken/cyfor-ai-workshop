@@ -16,6 +16,13 @@ const prismaMock = {
     create: vi.fn(),
     update: vi.fn(),
     deleteMany: vi.fn()
+  },
+  reservation: {
+    findMany: vi.fn(),
+    findFirst: vi.fn(),
+    findUnique: vi.fn(),
+    create: vi.fn(),
+    delete: vi.fn()
   }
 }
 
@@ -311,6 +318,159 @@ describe('DELETE /resources/:id', () => {
 
   it('rejects invalid id', async () => {
     const res = await request('DELETE', '/resources/abc')
+    expect(res.status).toBe(400)
+  })
+})
+
+// --- Reservation tests ---
+
+const futureStart = new Date(Date.now() + 3600_000) // 1 hour from now
+const futureEnd = new Date(futureStart.getTime() + 3600_000) // 2 hours from now
+
+const mockReservation = {
+  id: 1,
+  resourceId: 1,
+  bookedBy: 'Alice',
+  startTime: futureStart,
+  endTime: futureEnd,
+  createdAt: new Date('2024-01-01T00:00:00.000Z')
+}
+
+describe('GET /resources/:id/reservations', () => {
+  it('returns reservations for a resource', async () => {
+    prismaMock.resource.findUnique.mockResolvedValue(mockResource)
+    prismaMock.reservation.findMany.mockResolvedValue([mockReservation])
+
+    const res = await request('GET', '/resources/1/reservations')
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.reservations).toHaveLength(1)
+    expect(body.reservations[0].bookedBy).toBe('Alice')
+  })
+
+  it('returns empty list when no reservations', async () => {
+    prismaMock.resource.findUnique.mockResolvedValue(mockResource)
+    prismaMock.reservation.findMany.mockResolvedValue([])
+
+    const res = await request('GET', '/resources/1/reservations')
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.reservations).toEqual([])
+  })
+
+  it('returns 404 if resource does not exist', async () => {
+    prismaMock.resource.findUnique.mockResolvedValue(null)
+
+    const res = await request('GET', '/resources/999/reservations')
+    expect(res.status).toBe(404)
+  })
+})
+
+describe('POST /resources/:id/reservations', () => {
+  it('creates a reservation', async () => {
+    prismaMock.resource.findUnique.mockResolvedValue(mockResource)
+    prismaMock.reservation.findFirst.mockResolvedValue(null)
+    prismaMock.reservation.create.mockResolvedValue(mockReservation)
+
+    const res = await request('POST', '/resources/1/reservations', {
+      bookedBy: 'Alice',
+      startTime: futureStart.toISOString(),
+      endTime: futureEnd.toISOString()
+    })
+    expect(res.status).toBe(201)
+    const body = await res.json()
+    expect(body.bookedBy).toBe('Alice')
+  })
+
+  it('returns 404 if resource does not exist', async () => {
+    prismaMock.resource.findUnique.mockResolvedValue(null)
+
+    const res = await request('POST', '/resources/999/reservations', {
+      bookedBy: 'Alice',
+      startTime: futureStart.toISOString(),
+      endTime: futureEnd.toISOString()
+    })
+    expect(res.status).toBe(404)
+  })
+
+  it('returns 409 for overlapping reservation', async () => {
+    prismaMock.resource.findUnique.mockResolvedValue(mockResource)
+    prismaMock.reservation.findFirst.mockResolvedValue(mockReservation)
+
+    const res = await request('POST', '/resources/1/reservations', {
+      bookedBy: 'Bob',
+      startTime: futureStart.toISOString(),
+      endTime: futureEnd.toISOString()
+    })
+    expect(res.status).toBe(409)
+  })
+
+  it('returns 422 if endTime is before startTime', async () => {
+    const res = await request('POST', '/resources/1/reservations', {
+      bookedBy: 'Alice',
+      startTime: futureEnd.toISOString(),
+      endTime: futureStart.toISOString()
+    })
+    expect(res.status).toBe(422)
+  })
+
+  it('returns 422 if duration is less than 30 minutes', async () => {
+    const shortEnd = new Date(futureStart.getTime() + 15 * 60_000) // 15 min
+    const res = await request('POST', '/resources/1/reservations', {
+      bookedBy: 'Alice',
+      startTime: futureStart.toISOString(),
+      endTime: shortEnd.toISOString()
+    })
+    expect(res.status).toBe(422)
+  })
+
+  it('returns 422 if startTime is in the past', async () => {
+    const pastStart = new Date(Date.now() - 3600_000)
+    const pastEnd = new Date(pastStart.getTime() + 3600_000)
+    const res = await request('POST', '/resources/1/reservations', {
+      bookedBy: 'Alice',
+      startTime: pastStart.toISOString(),
+      endTime: pastEnd.toISOString()
+    })
+    expect(res.status).toBe(422)
+  })
+
+  it('rejects missing bookedBy', async () => {
+    const res = await request('POST', '/resources/1/reservations', {
+      startTime: futureStart.toISOString(),
+      endTime: futureEnd.toISOString()
+    })
+    expect(res.status).toBe(400)
+  })
+
+  it('rejects empty bookedBy', async () => {
+    const res = await request('POST', '/resources/1/reservations', {
+      bookedBy: '',
+      startTime: futureStart.toISOString(),
+      endTime: futureEnd.toISOString()
+    })
+    expect(res.status).toBe(400)
+  })
+})
+
+describe('DELETE /reservations/:id', () => {
+  it('deletes a reservation', async () => {
+    prismaMock.reservation.findUnique.mockResolvedValue(mockReservation)
+    prismaMock.reservation.delete.mockResolvedValue(mockReservation)
+
+    const res = await request('DELETE', '/reservations/1')
+    expect(res.status).toBe(204)
+  })
+
+  it('returns 404 if reservation does not exist', async () => {
+    prismaMock.reservation.findUnique.mockResolvedValue(null)
+
+    const res = await request('DELETE', '/reservations/999')
+    expect(res.status).toBe(404)
+  })
+
+  it('rejects invalid id', async () => {
+    const res = await request('DELETE', '/reservations/abc')
     expect(res.status).toBe(400)
   })
 })

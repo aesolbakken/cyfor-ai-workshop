@@ -2,18 +2,174 @@ import { type FormEvent, useState } from "react";
 import {
   Category,
   getGetResourcesQueryKey,
+  getGetResourcesIdReservationsQueryKey,
   useDeleteResourcesId,
+  useDeleteReservationsId,
   useGetResources,
+  useGetResourcesIdReservations,
   usePostResources,
+  usePostResourcesIdReservations,
   usePutResourcesId,
 } from "./api";
-import type { Resource } from "./api/generated/hooks";
+import type { Resource, Reservation } from "./api/generated/hooks";
 import { useQueryClient } from "@tanstack/react-query";
 
 const CATEGORIES = Object.values(Category);
 
 const categoryLabel = (cat: string) =>
   cat.charAt(0).toUpperCase() + cat.slice(1);
+
+const formatDateTime = (iso: string) => {
+  const d = new Date(iso);
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+function ReservationPanel({
+  resource,
+  onClose,
+}: {
+  resource: Resource;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [bookedBy, setBookedBy] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const reservationsQuery = useGetResourcesIdReservations(resource.id);
+  const reservations = reservationsQuery.data?.reservations ?? [];
+
+  const refreshReservations = () =>
+    queryClient.invalidateQueries({
+      queryKey: getGetResourcesIdReservationsQueryKey(resource.id),
+    });
+
+  const createMutation = usePostResourcesIdReservations({
+    mutation: {
+      onSuccess: async () => {
+        setBookedBy("");
+        setStartTime("");
+        setEndTime("");
+        setError(null);
+        await refreshReservations();
+      },
+      onError: (err: any) => {
+        const msg =
+          err?.response?.data?.error || err?.message || "Failed to create reservation";
+        setError(msg);
+      },
+    },
+  });
+
+  const deleteMutation = useDeleteReservationsId({
+    mutation: { onSuccess: refreshReservations },
+  });
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+    if (!bookedBy.trim() || !startTime || !endTime || createMutation.isPending) return;
+    createMutation.mutate({
+      id: resource.id,
+      data: {
+        bookedBy: bookedBy.trim(),
+        startTime: new Date(startTime).toISOString(),
+        endTime: new Date(endTime).toISOString(),
+      },
+    });
+  };
+
+  const inputSmClass =
+    "rounded-md border border-border px-3 py-1.5 text-sm text-text outline-none focus:border-primary-light";
+  const btnPrimary =
+    "rounded-md bg-primary px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-border";
+  const btnSecondary =
+    "rounded-md border border-border px-3 py-1 text-sm text-text-muted disabled:cursor-not-allowed disabled:border-border disabled:text-border";
+
+  return (
+    <section className="rounded-lg border border-border bg-surface p-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-medium text-text-muted uppercase tracking-wide">
+          Reservations — {resource.title}
+        </h2>
+        <button type="button" onClick={onClose} className={btnSecondary}>
+          Close
+        </button>
+      </div>
+
+      <form className="mt-4 flex flex-col gap-2" onSubmit={handleSubmit}>
+        <input
+          value={bookedBy}
+          onChange={(e) => setBookedBy(e.target.value)}
+          placeholder="Your name"
+          maxLength={120}
+          className={inputSmClass}
+        />
+        <div className="flex gap-2">
+          <input
+            type="datetime-local"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+            className={`flex-1 ${inputSmClass}`}
+          />
+          <input
+            type="datetime-local"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+            className={`flex-1 ${inputSmClass}`}
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={
+            !bookedBy.trim() || !startTime || !endTime || createMutation.isPending
+          }
+          className={btnPrimary}
+        >
+          {createMutation.isPending ? "Booking..." : "Book"}
+        </button>
+        {error && <p className="text-sm text-danger">{error}</p>}
+      </form>
+
+      {reservationsQuery.isPending && (
+        <p className="mt-4 text-sm text-text-muted">Loading reservations...</p>
+      )}
+
+      {!reservationsQuery.isPending && reservations.length === 0 && (
+        <p className="mt-4 text-sm text-text-muted">No reservations yet.</p>
+      )}
+
+      {reservations.length > 0 && (
+        <ul className="mt-4 divide-y divide-border">
+          {reservations.map((r: Reservation) => (
+            <li key={r.id} className="flex items-center justify-between py-3">
+              <div>
+                <span className="font-medium text-text">{r.bookedBy}</span>
+                <span className="ml-2 text-sm text-text-muted">
+                  {formatDateTime(r.startTime)} — {formatDateTime(r.endTime)}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => deleteMutation.mutate({ id: r.id })}
+                disabled={deleteMutation.isPending}
+                className={`${btnSecondary} hover:border-danger hover:text-danger`}
+              >
+                Cancel
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 export default function App() {
   const [title, setTitle] = useState("");
@@ -25,6 +181,7 @@ export default function App() {
   const [editCategory, setEditCategory] = useState<string>("general");
   const [searchText, setSearchText] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("");
+  const [selectedResourceId, setSelectedResourceId] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -323,6 +480,13 @@ export default function App() {
                             ? "Removing..."
                             : "Remove"}
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedResourceId(resource.id)}
+                          className={btnSecondary}
+                        >
+                          Book
+                        </button>
                       </div>
                     </li>
                   ),
@@ -337,6 +501,22 @@ export default function App() {
             )
           ) : null}
         </section>
+
+        {/* Reservation panel */}
+        {selectedResourceId !== null &&
+          (() => {
+            const selectedResource = resources.find(
+              (r) => r.id === selectedResourceId,
+            );
+            if (!selectedResource) return null;
+            return (
+              <ReservationPanel
+                key={selectedResourceId}
+                resource={selectedResource}
+                onClose={() => setSelectedResourceId(null)}
+              />
+            );
+          })()}
       </div>
     </main>
   );

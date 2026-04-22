@@ -8,10 +8,21 @@ datasource db {
 }
 
 model Resource {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String   @default("")
-  category    String   @default("general")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           Int           @id @default(autoincrement())
+  title        String
+  description  String        @default("")
+  category     String        @default("general")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  reservations Reservation[]
+}
+
+model Reservation {
+  id         Int      @id @default(autoincrement())
+  resourceId Int
+  bookedBy   String
+  startTime  DateTime
+  endTime    DateTime
+  createdAt  DateTime @default(now())
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
 }
