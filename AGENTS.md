@@ -53,8 +53,8 @@ The frontend is fully driven by the API's OpenAPI document:
 3. `web/orval.config.ts` reads `../api/openapi.json` and writes
    `web/src/api/generated/hooks.ts` (react-query + axios, with
    `customClient` mutator from `web/src/api/client.ts`).
-4. `web/src/App.tsx` consumes hooks like `useGetItems`, `usePostItems`,
-   `useDeleteItemsId`.
+4. `web/src/App.tsx` consumes hooks like `useGetResources`,
+   `usePostResources`, `useDeleteResourcesId`.
 
 **Implications for agents:**
 
@@ -64,7 +64,7 @@ The frontend is fully driven by the API's OpenAPI document:
 - **Never hand-edit `web/src/api/generated/*`** — Orval cleans the directory
   on each run (`clean: true`).
 - Generated hook names follow Orval's `method + path` convention
-  (`useGetItems`, `usePostItems`, `useDeleteItemsId`). Renaming a route
+  (`useGetResources`, `usePostResources`, `useDeleteResourcesId`). Renaming a route
   renames the hook — update consumers accordingly.
 
 ## API conventions (`api/src/app.ts`)
@@ -75,8 +75,8 @@ The frontend is fully driven by the API's OpenAPI document:
 - Request/response shapes are Zod schemas with `.openapi('Name')` so Orval
   emits named TS types.
 - Convert Prisma `Date` to ISO string before responding (see
-  `toItemResponse`); response schemas use `z.string().datetime()`. Mirror
-  this for new models.
+  `toResourceResponse`); response schemas use `z.string().datetime()`.
+  Mirror this for new models.
 - Path params use `z.coerce.number()` because Hono passes them as strings.
 - Prisma client is a shared singleton in `api/src/db.ts`. Import via
   `./db.js` — the `.js` extension is **required** by NodeNext ESM
@@ -89,7 +89,7 @@ The frontend is fully driven by the API's OpenAPI document:
 - Use generated hooks from `web/src/api` (re-exported via `index.ts`). Do
   **not** call `axios` directly in components.
 - After mutations, invalidate queries via the generated query-key helpers
-  (e.g. `getGetItemsQueryKey()`) — see `web/src/App.tsx`.
+  (e.g. `getGetResourcesQueryKey()`) — see `web/src/App.tsx`.
 - Dev requests go to `/api/*`; Vite rewrites them to `http://localhost:3000`
   (strips `/api`). For production builds, set `VITE_API_BASE_URL`.
 - Tailwind v4 is wired through `@tailwindcss/vite` — there is **no**
@@ -144,3 +144,16 @@ verifying API mutations.
 - ❌ Create Prisma migrations — this project uses `db push`.
 - ❌ Call `axios` directly from React components — use the generated hooks.
 - ❌ Edit `api/openapi.json` by hand — it is generated.
+
+## Skills
+
+Reusable skill files live under `.agents/skills/`. Each skill is a
+Markdown file (`SKILL.md`) that an AI agent can invoke by name.
+
+| Skill | Path | Purpose |
+| --- | --- | --- |
+| `review-pr` | `.agents/skills/review-pr/SKILL.md` | Project-specific PR review checklist covering codegen sync, API/web conventions, domain validation, and quality. |
+
+When adding a new skill, create a directory under `.agents/skills/` with a
+`SKILL.md` that describes the task, the checks to perform, and the expected
+output format.

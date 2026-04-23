@@ -80,6 +80,7 @@ The database and schema are recreated on startup.
 ## Project Structure
 
 ```text
+├── .agents/      # Copilot skills (PR review, etc.)
 ├── api/          # Hono REST API + Prisma + SQLite
 ├── web/          # React + Vite + TailwindCSS frontend
 └── package.json  # npm workspaces root
