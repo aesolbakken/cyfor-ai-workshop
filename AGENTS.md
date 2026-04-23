@@ -152,6 +152,8 @@ Markdown file (`SKILL.md`) that an AI agent can invoke by name.
 
 | Skill | Path | Purpose |
 | --- | --- | --- |
+| `ship-issue` | `.agents/skills/ship-issue/SKILL.md` | End-to-end orchestrator: pick issue → triage → plan → implement → PR → review → self-fix → merge. Invokes sub-skills automatically. |
+| `plan-issue` | `.agents/skills/plan-issue/SKILL.md` | Turn a triaged issue into a concrete implementation plan with file-by-file changes, code patterns, and ordered todos. Posts to the issue. |
 | `review-pr` | `.agents/skills/review-pr/SKILL.md` | Project-specific PR review checklist covering codegen sync, API/web conventions, domain validation, and quality. |
 | `refine-issue` | `.agents/skills/refine-issue/SKILL.md` | Turn a vague issue or requirement into an implementation-ready brief with acceptance criteria, business rules, and edge cases. |
 | `triage-issue` | `.agents/skills/triage-issue/SKILL.md` | Read a GitHub issue and post a concise triage (scope, assumptions, acceptance criteria, impacted areas) back as a comment. |
