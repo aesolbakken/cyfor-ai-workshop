@@ -1,3 +1,8 @@
+---
+name: review-pr
+description: Project-specific PR review checklist covering codegen sync, API/web conventions, domain validation, and quality.
+---
+
 # Skill: PR Review
 
 Review a pull request in the **cyfor-ai-workshop** repository.
