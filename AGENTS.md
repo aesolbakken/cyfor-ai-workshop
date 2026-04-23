@@ -153,6 +153,7 @@ Markdown file (`SKILL.md`) that an AI agent can invoke by name.
 | Skill | Path | Purpose |
 | --- | --- | --- |
 | `review-pr` | `.agents/skills/review-pr/SKILL.md` | Project-specific PR review checklist covering codegen sync, API/web conventions, domain validation, and quality. |
+| `refine-issue` | `.agents/skills/refine-issue/SKILL.md` | Turn a vague issue or requirement into an implementation-ready brief with acceptance criteria, business rules, and edge cases. |
 
 When adding a new skill, create a directory under `.agents/skills/` with a
 `SKILL.md` that describes the task, the checks to perform, and the expected
