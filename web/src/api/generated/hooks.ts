@@ -97,6 +97,10 @@ export interface UpdateResource {
   category?: string;
 }
 
+export type GetResourcesParams = {
+search?: string;
+};
+
 export const get = (
 
  signal?: AbortSignal
@@ -272,13 +276,14 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
 
 
 export const getResources = (
-
+    params?: GetResourcesParams,
  signal?: AbortSignal
 ) => {
 
 
       return customClient<ResourceListResponse>(
-      {url: `/resources`, method: 'GET', signal
+      {url: `/resources`, method: 'GET',
+        params, signal
     },
       );
     }
@@ -286,23 +291,23 @@ export const getResources = (
 
 
 
-export const getGetResourcesQueryKey = () => {
+export const getGetResourcesQueryKey = (params?: GetResourcesParams,) => {
     return [
-    `/resources`
+    `/resources`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetResourcesQueryOptions = <TData = Awaited<ReturnType<typeof getResources>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>>, }
+export const getGetResourcesQueryOptions = <TData = Awaited<ReturnType<typeof getResources>>, TError = ErrorType<unknown>>(params?: GetResourcesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetResourcesQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetResourcesQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getResources>>> = ({ signal }) => getResources(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getResources>>> = ({ signal }) => getResources(params, signal);
 
 
 
@@ -316,7 +321,7 @@ export type GetResourcesQueryError = ErrorType<unknown>
 
 
 export function useGetResources<TData = Awaited<ReturnType<typeof getResources>>, TError = ErrorType<unknown>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>> & Pick<
+ params: undefined |  GetResourcesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getResources>>,
           TError,
@@ -326,7 +331,7 @@ export function useGetResources<TData = Awaited<ReturnType<typeof getResources>>
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetResources<TData = Awaited<ReturnType<typeof getResources>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>> & Pick<
+ params?: GetResourcesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getResources>>,
           TError,
@@ -336,16 +341,16 @@ export function useGetResources<TData = Awaited<ReturnType<typeof getResources>>
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetResources<TData = Awaited<ReturnType<typeof getResources>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>>, }
+ params?: GetResourcesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetResources<TData = Awaited<ReturnType<typeof getResources>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>>, }
+ params?: GetResourcesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>>, }
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetResourcesQueryOptions(options)
+  const queryOptions = getGetResourcesQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

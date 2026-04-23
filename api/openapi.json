@@ -190,6 +190,17 @@
         "tags": [
           "Resources"
         ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "conference"
+            },
+            "required": false,
+            "name": "search",
+            "in": "query"
+          }
+        ],
         "responses": {
           "200": {
             "description": "List all resources",
