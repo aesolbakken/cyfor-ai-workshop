@@ -396,9 +396,9 @@ export default function App() {
 
   return (
     <main className="min-h-screen bg-fv-grey px-4 py-10 text-fv-black">
-      <div className="mx-auto max-w-xl space-y-8">
+      <div className="mx-auto max-w-2xl space-y-8">
         <header className="space-y-2">
-          <h1 className="text-3xl font-normal text-fv-black">Resources</h1>
+          <h1 className="text-fv-black">Resources</h1>
           <p className="text-sm text-fv-green">
             Manage your bookable resources — rooms, equipment, vehicles, and
             more.

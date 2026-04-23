@@ -4,10 +4,14 @@ A design system for the **cyfor-ai-workshop** booking/resource-management
 app, inspired by the Norwegian Armed Forces (Forsvaret) visual identity.
 
 > **Copyright note:** Forsvaret's visual profile is protected by Norwegian
-> copyright and criminal law. This document describes a design system
-> _inspired by_ their publicly described principles and extracted color
-> palette. We do not use their logo, Cera Pro font, or any restricted
-> brand assets.
+> copyright and criminal law. The `NEDLASTING/` folder contains official
+> brand assets (fonts, icons, illustrations, logos) downloaded from
+> [forsvaret.no](https://www.forsvaret.no/om-forsvaret/forsvarets-profil/profilelement).
+> These assets are **restricted** and must not be redistributed, used in
+> production products, or published outside this workshop context. This
+> document describes a design system _inspired by_ their publicly
+> described principles and extracted color palette. The web app uses the
+> free Inter typeface — not the proprietary Forsvaret font.
 
 ---
 
@@ -69,8 +73,22 @@ All colors extracted from the Forsvaret public website CSS.
 | Small       | 0.875rem   | 400    | 1.6         | —              | —              |
 | Label       | 0.75rem    | 700    | 1.5         | 0.12em         | uppercase      |
 
-**Font stack:** `Inter, ui-sans-serif, system-ui, sans-serif` (Inter is a
-close free match for Forsvaret's proprietary Cera Pro).
+**Proprietary font:** The official Forsvaret typeface is called **Forsvaret**
+(not Cera Pro). It ships in 4 weights:
+
+| Weight  | TTF file      | Path                                      |
+| ------- | ------------- | ----------------------------------------- |
+| Light   | `FORSLGT_.ttf` | `NEDLASTING/TYPOGRAFI/FORSVARET/` |
+| Regular | `FORSARR_.ttf` | `NEDLASTING/TYPOGRAFI/FORSVARET/` |
+| Medium  | `FORSMED_.ttf` | `NEDLASTING/TYPOGRAFI/FORSVARET/` |
+| Bold    | `FORSBLD.ttf`  | `NEDLASTING/TYPOGRAFI/FORSVARET/` |
+
+> These fonts are restricted brand assets — do not embed in production
+> builds or redistribute.
+
+**Web app font stack:** `Inter, ui-sans-serif, system-ui, sans-serif` —
+Inter is a close free match for the proprietary Forsvaret typeface and is
+the font actually used in this project.
 
 ---
 
@@ -188,3 +206,70 @@ All custom tokens are defined in `web/src/index.css` using Tailwind v4's
 
 This generates utility classes like `bg-fv-black`, `text-fv-focus`,
 `border-fv-green`, etc.
+
+---
+
+## Brand Assets (`NEDLASTING/`)
+
+The `NEDLASTING/` folder contains official Forsvaret brand assets
+downloaded from their public profile page. Below is a complete inventory.
+
+### Color Palette
+
+- **PDF reference:** `NEDLASTING/FARGEPALETT/Forsvarets farger.pdf`
+- **Interactive web app:** <https://forsvarets-farger.web.app/>
+
+The colors already configured in this project's `@theme` block (see above)
+were extracted from these references.
+
+### Icon Library (~150 icons)
+
+Simple monochrome line icons on a 120×120 SVG viewBox, grid-coded A1 – N10.
+
+| Format       | Path                            | Notes             |
+| ------------ | ------------------------------- | ----------------- |
+| SVG (black)  | `NEDLASTING/IKONER/SVG sort/`   | Web-ready vectors |
+| PDF (black)  | `NEDLASTING/IKONER/PDF sort/`   | Print / hi-res    |
+| PDF (white)  | `NEDLASTING/IKONER/PDF hvit/`   | For dark backgrounds |
+| Overview     | `NEDLASTING/IKONER/Ikoner Oversikt.pdf` | Full grid sheet |
+| PowerPoint   | `NEDLASTING/IKONER/ikoner.pptx` | Editable slide deck |
+
+**Naming convention:** `Forsvaret ikoner_{code} {name}.svg`
+(e.g., `Forsvaret ikoner_A4 soldat.svg`).
+
+Example categories: communication (brev, dialog, mobil chat), transport
+(bil, fly, båt, stridsvogn), people (soldat, profil, personer), tools
+(tannhjul, saks, lupe), nature (fjell, sol, grantre), and many more.
+
+### Illustrations
+
+Three illustration styles, each with color/tone variants:
+
+| Style       | Path                                | Variants         | Content |
+| ----------- | ----------------------------------- | ---------------- | ------- |
+| Flat icons  | `NEDLASTING/ILLUSTRASJONER/mat_Ikoner/`      | `dark/`, `light/` | Military vehicles (land, air, sea, space), weapons |
+| Isometric   | `NEDLASTING/ILLUSTRASJONER/mat_Isometriske/`  | `color/`, `line/` | Vehicles, personnel (soldiers, civilians, specialists), equipment |
+| Profiles    | `NEDLASTING/ILLUSTRASJONER/mat_Profiler/`      | `dark/`, `gray/`, `light/` | Side-view silhouettes of vehicles and personnel |
+
+**Overview poster:** `NEDLASTING/ILLUSTRASJONER/Plansjer.pdf`
+
+Subject categories across all styles:
+- **Land:** Amaroc, CV90, Hornet, K9, M109, Mercedes-Benz, NASAMS, Scania, Supacat
+- **Air (luft):** Bell 412, F-35, Hercules C-130, Poseidon P-8
+- **Sea (sjø):** Fregatt, Korvett, Kystvakt, Ubåt
+- **Space:** Dish, Dome, Satellite
+- **Weapons (våpen):** Glock P80, HK416, Minimi
+- **Personnel (isometric only):** Soldiers, officers, medics, military police, mechanics, civilians
+
+### Logo Variants
+
+| Use case      | Path                                      | Formats       | Variants |
+| ------------- | ----------------------------------------- | ------------- | -------- |
+| Screen (RGB)  | `NEDLASTING/LOGOVARIANTER/Logo Skjerm/`   | PNG, EPS      | Left-aligned + centered; black + white |
+| Print (CMYK)  | `NEDLASTING/LOGOVARIANTER/Logo Trykk/`    | EPS           | CMYK, PMS, B/W; left-aligned + centered |
+| Social media  | `NEDLASTING/LOGOVARIANTER/Logoer SoMe/`   | JPG           | Facebook, Instagram profile images |
+
+### Video Templates
+
+A link to Forsvaret's channel design on Notion is bookmarked at:
+`NEDLASTING/Forsvarets videomaler (lenke).webloc`
