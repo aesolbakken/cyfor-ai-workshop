@@ -1,13 +1,27 @@
 ---
 name: ship-issue
-description: End-to-end orchestrator that picks a GitHub issue and drives it through triage, planning, implementation, PR, review, self-fix, and merge.
+description: End-to-end orchestrator that picks a GitHub issue and drives it through triage, planning, implementation, PR, review, self-fix, and merge. Maximises parallelism at every phase.
 ---
 
 # Skill: Ship Issue
 
 Take a GitHub issue from first contact to merged PR. This skill
-orchestrates the full lifecycle by invoking sub-skills at each phase and
-applying quality gates between them.
+orchestrates the full lifecycle by invoking sub-skills at each phase,
+applying quality gates between them, and **maximising parallelism**
+wherever independent work streams exist.
+
+## Parallelism philosophy
+
+- **Default to parallel.** Any two tasks that don't have a data
+  dependency should run simultaneously via sub-agents or parallel tool
+  calls.
+- **Pipeline across phases.** Don't wait for a phase to fully complete if
+  partial output already unblocks the next phase.
+- **Fan-out at every layer.** During implementation, fan out to as many
+  sub-agents as there are independent units of work (separate files,
+  separate models, separate components).
+- **Merge results, not processes.** Let sub-agents finish independently;
+  collect and integrate their outputs in a single merge step.
 
 ## How to invoke
 
@@ -17,32 +31,46 @@ autonomously, only pausing if something is genuinely uncertain.
 
 ---
 
-## Phase 1 — Pick & assign
+## Phase 1 — Pick & assign + early recon
 
-1. Fetch the issue via `gh issue view <number> --json title,body,labels,assignees,comments`.
-2. Read the title, body, labels, and all comments to understand context.
-3. Assign yourself to the issue:
-   ```
-   gh issue edit <number> --add-assignee @me
-   ```
-4. Add a brief comment acknowledging you're starting work:
-   ```
-   gh issue comment <number> --body "🤖 Starting work on this issue. Will triage → plan → implement → PR → review → merge."
-   ```
+Launch **all of the following in parallel**:
+
+| Task | Tool | Purpose |
+| --- | --- | --- |
+| Fetch issue | `gh issue view <number> --json title,body,labels,assignees,comments` | Get full issue context |
+| Assign self | `gh issue edit <number> --add-assignee @me` | Claim the issue |
+| Post start comment | `gh issue comment <number> --body "🤖 Starting work …"` | Signal to watchers |
+| Explore codebase | Launch **explore sub-agents** (see below) | Pre-warm context for triage & plan |
+
+### Early codebase recon (explore agents)
+
+While the issue is being fetched, launch **parallel explore agents** to
+map the codebase areas most likely to be relevant. This saves a full
+round-trip later during triage and planning.
+
+Launch these explore agents simultaneously:
+
+1. **Schema & DB explorer** — read `api/prisma/schema.prisma`, understand
+   existing models and relations.
+2. **API routes explorer** — read `api/src/app.ts`, catalogue existing
+   routes, Zod schemas, and response helpers.
+3. **Web explorer** — read `web/src/App.tsx` and other components, understand
+   how hooks are consumed and queries invalidated.
+
+Each explore agent returns a concise summary. Collect all three before
+starting triage.
 
 **Gate:** If the issue is locked or already has an open PR linked to it,
 stop and inform the user.
 
 ---
 
-## Phase 2 — Triage
+## Phase 2 — Triage (with pre-warmed context)
 
-Invoke the **`triage-issue`** skill with the issue number.
-
-The triage skill will:
-- Analyse the issue in context of the repo.
-- Post a structured triage comment (scope, impacted areas, acceptance
-  criteria, risks).
+Invoke the **`triage-issue`** skill with the issue number **plus** the
+codebase summaries from Phase 1's explore agents. Feeding in pre-warmed
+context lets the triage skill skip its own codebase exploration and
+produce results faster.
 
 **After the triage skill completes:**
 
@@ -56,17 +84,18 @@ The triage skill will:
 
 ---
 
-## Phase 3 — Plan
+## Phase 3 — Plan (overlapped with branch setup)
 
-Invoke the **`plan-issue`** skill with the issue number. The triage
-comment will already be on the issue, so the planning skill can read it.
+Launch **in parallel**:
 
-The plan skill will:
-- Analyse the codebase to determine which files need changes.
-- Produce a structured implementation plan (file-by-file changes, ordered
-  todos, parallelisation opportunities).
-- Post the plan as a GitHub issue comment.
-- Return the plan as local context.
+| Task | Purpose |
+| --- | --- |
+| Invoke **`plan-issue`** skill | Produce implementation plan from issue + triage + codebase context |
+| Create feature branch | `git checkout -b <issue-number>-<short-slug> main` |
+| Pre-install deps if needed | `npm install` (only if plan might add packages) |
+
+The plan skill already has the codebase summaries from Phase 1, so pass
+those in to avoid redundant exploration.
 
 **After the plan skill completes:**
 
@@ -75,39 +104,78 @@ The plan skill will:
    - The codegen step (`npm run generate`) is in the right place.
    - Validation steps (`npm run typecheck`) are included.
 2. If the plan has gaps, refine it before proceeding.
-3. Save the plan todos for use during implementation.
+3. Parse the plan into an ordered dependency graph of todos for Phase 4.
 
 **Gate:** Plan must cover all acceptance criteria and include validation
 steps before proceeding.
 
 ---
 
-## Phase 4 — Implement
+## Phase 4 — Implement (maximum fan-out)
 
-This is where the code gets written. Use the issue + triage + plan as
-your working context.
+This is where the biggest parallelism wins are. Use the issue + triage +
+plan as your working context.
 
-### Setup
+### Build a dependency graph
 
-1. Create a feature branch:
-   ```
-   git checkout -b <issue-number>-<short-slug> main
-   ```
-   Example: `42-add-booking-model`
+From the plan's todo list, construct an explicit dependency graph:
 
-### Execution strategy
+```
+schema change ──→ API routes ──→ npm run generate ──→ web components
+                                                  ├──→ ComponentA (agent 1)
+                                                  ├──→ ComponentB (agent 2)
+                                                  └──→ ComponentC (agent 3)
+```
 
-Follow the plan's ordered todo list. At each step:
+### Layer-by-layer execution with fan-out
 
-- **Sequential work** (database → API → codegen → web): do these in order
-  since each layer depends on the previous one.
-- **Parallel work**: when the plan identifies independent tasks (e.g.,
-  multiple web components after hooks are generated), use sub-agents to
-  work on them simultaneously.
+#### Layer 1 — Database (sequential, single agent)
+- Modify `api/prisma/schema.prisma`.
+- This is a single file; no parallelism needed within this layer.
+
+#### Layer 2 — API (fan-out if multiple routes)
+- If the plan adds **multiple independent routes**, launch a **sub-agent
+  per route**. Each agent writes its route definition + Zod schemas in
+  an isolated section of `api/src/app.ts`.
+- If routes depend on each other, keep them sequential.
+- Each sub-agent receives: the full plan context, the schema from Layer 1,
+  and the specific route it owns.
+
+**Merge point:** Collect all route code. If multiple agents edited
+`api/src/app.ts`, integrate their changes carefully (they will have
+touched different sections).
+
+#### Layer 3 — Codegen (sequential, must wait for Layer 2)
+- Run `npm run generate` — this regenerates Prisma client, OpenAPI doc,
+  and Orval hooks.
+- This is a hard synchronisation point. Nothing in Layer 4 can start
+  until this completes.
+
+#### Layer 4 — Web (maximum fan-out)
+- This is where parallelism pays off the most.
+- Launch a **separate sub-agent for each independent web component or
+  page** identified in the plan.
+- Each sub-agent receives: the plan context, the generated hook names
+  from Layer 3, and its specific component assignment.
+- Sub-agents can work on completely independent files simultaneously.
+
+**Example fan-out:**
+```
+├── Agent A: BookingList.tsx (uses useGetBookings)
+├── Agent B: BookingForm.tsx (uses usePostBookings)
+├── Agent C: BookingDetail.tsx (uses useGetBookingsId)
+└── Agent D: Update App.tsx routing + navigation
+```
+
+#### Layer 5 — Integration (sequential, single agent)
+- Wire components together (routing, navigation, imports).
+- This agent collects all outputs from Layer 4 and ensures they integrate
+  cleanly.
 
 ### Repo conventions to follow
 
-These are non-negotiable for this project:
+These are non-negotiable for this project — include them in every
+sub-agent's prompt:
 
 - Use `createRoute(...)` + `app.openapi(route, handler)` for all public
   API routes. Never use plain `app.get/post/…`.
@@ -121,13 +189,14 @@ These are non-negotiable for this project:
 - Tailwind v4 via `index.css`, no `tailwind.config.js`.
 - No Prisma migrations — use `db push`.
 
-### Validation
+### Validation (parallel where possible)
 
-After all code changes:
+After all code changes, run **in parallel**:
 
-1. Run `npm run generate` (if API routes or schemas changed).
-2. Run `npm run typecheck` — must pass with zero errors.
-3. Run `npm run build` — must pass (if build inputs changed).
+1. `npm run generate` (if API routes or schemas changed).
+2. Then, once generate completes, run **simultaneously**:
+   - `npm run typecheck`
+   - `npm run build` (if build inputs changed)
 
 If validation fails, fix the errors and re-validate before proceeding.
 
@@ -146,10 +215,9 @@ If validation fails, fix the errors and re-validate before proceeding.
    ```
    Use conventional commit types: `feat`, `fix`, `chore`, `refactor`, etc.
 
-2. Push the branch:
-   ```
-   git push -u origin <branch-name>
-   ```
+2. Run **in parallel**:
+   - Push the branch: `git push -u origin <branch-name>`
+   - Draft the PR body (compute while push is in flight).
 
 3. Open a PR via `gh`:
    ```
@@ -166,46 +234,49 @@ If validation fails, fix the errors and re-validate before proceeding.
 
 ---
 
-## Phase 6 — Review PR
+## Phase 6 — Review PR (parallel reviews)
 
-Invoke the **`review-pr`** skill with the PR number.
+Launch **all applicable reviews in parallel**:
 
-The review skill will check:
-- Codegen pipeline integrity.
-- API conventions compliance.
-- Web/frontend conventions.
-- Database and schema consistency.
-- Domain validation rules.
-- General code quality.
+| Review agent | Condition | Skill |
+| --- | --- | --- |
+| Code review | Always | **`review-pr`** |
+| Design review | PR touches `web/src/` (excl. `generated/`) | **`design`** |
 
-**Additionally**, if the PR touches any files in `web/src/` (excluding
-`web/src/api/generated/`), also invoke the **`design`** skill to verify
-the UI follows the Forsvaret-inspired design system.
-
-Capture all review findings for the next phase.
+Both review agents receive the PR number and work independently. Collect
+findings from all agents before proceeding to self-fix.
 
 ---
 
-## Phase 7 — Self-fix
+## Phase 7 — Self-fix (parallel fixes)
 
-Process the review findings:
+Categorise all review findings, then **fix independent issues in
+parallel**:
 
-1. **Critical issues** (bugs, security, correctness, missing codegen):
-   Fix these immediately. Commit and push.
-2. **Important issues** (convention violations, missing validation):
-   Fix these. Commit and push.
-3. **Nits** (style observations that don't affect correctness):
-   Fix if trivial, otherwise note them and move on.
-4. **Uncertain items**: If a review finding is ambiguous or requires a
-   design decision, **stop and ask the user** before fixing.
+### Categorise
 
-After fixes:
+1. **Critical** (bugs, security, correctness, missing codegen) — must fix.
+2. **Important** (convention violations, missing validation) — must fix.
+3. **Nits** (style observations) — fix if trivial.
+4. **Uncertain** — stop and ask the user.
 
-1. Re-run `npm run typecheck` (and `npm run build` if relevant).
-2. Push the fix commits.
-3. Optionally re-run the review skill on the updated diff to confirm
-   no new issues were introduced. Only do this if significant changes
-   were made during the fix phase.
+### Parallel fix strategy
+
+- Group findings by file. Assign one sub-agent per file (or per
+  independent group of findings).
+- Each sub-agent receives: the specific findings for its file(s), the
+  full plan context, and the repo conventions.
+- Sub-agents make their fixes and return the changes.
+- Integrate all fixes, then commit.
+
+### Validate and push
+
+Run **in parallel** after all fixes are applied:
+- `npm run typecheck`
+- `npm run build` (if relevant)
+
+Push the fix commits. If significant changes were made, optionally re-run
+the review skill on the updated diff to confirm no new issues.
 
 ---
 
@@ -236,6 +307,49 @@ After fixes:
 
 ---
 
+## Parallelism summary
+
+Visual overview of what runs concurrently at each phase:
+
+```
+Phase 1  ┬─ fetch issue ─────────────────┐
+         ├─ assign self                   │
+         ├─ post comment                  ├─→ Phase 2 (triage)
+         ├─ explore: schema & DB ─────────┤
+         ├─ explore: API routes ──────────┤
+         └─ explore: web components ──────┘
+
+Phase 3  ┬─ invoke plan-issue skill ──────┐
+         └─ create feature branch         ├─→ Phase 4
+                                          │
+Phase 4  ┬─ Layer 1: schema (single) ────→│
+         └─ Layer 2: routes (fan-out) ────→│
+              ├─ route agent A             │
+              └─ route agent B             │
+                                           │
+         ── Layer 3: npm run generate ─────→│  (sync point)
+                                           │
+         ┬─ Layer 4: web (fan-out) ────────→│
+         │   ├─ component agent A          │
+         │   ├─ component agent B          │
+         │   └─ component agent C          │
+         └─ Layer 5: integration ──────────→│
+                                           │
+         ┬─ typecheck ────────────────────→│  (parallel validation)
+         └─ build ────────────────────────→│
+
+Phase 6  ┬─ review-pr skill ─────────────→│  (parallel reviews)
+         └─ design skill (if UI) ─────────→│
+
+Phase 7  ┬─ fix agent: file A ───────────→│  (parallel fixes)
+         ├─ fix agent: file B ───────────→│
+         └─ fix agent: file C ───────────→│
+         ┬─ typecheck ────────────────────→│  (parallel validation)
+         └─ build ────────────────────────→│
+```
+
+---
+
 ## Error handling
 
 At any phase, if something goes wrong:
@@ -247,18 +361,19 @@ At any phase, if something goes wrong:
 | `npm run typecheck` fails after implementation | Fix errors, re-validate |
 | `npm run generate` fails | Check for syntax errors in schemas, fix |
 | PR review finds critical bugs | Fix and re-push |
-| Merge conflicts | Rebase on main, resolve, re-validate |
+| Sub-agent produces conflicting edits | Resolve conflicts in the merge step for that layer |
+| Merge conflicts with main | Rebase on main, resolve, re-validate |
 | CI checks fail on unrelated code | Inform user, await decision |
 | Anything genuinely uncertain | Stop and ask the user |
 
 ## Sub-skill reference
 
-| Phase | Skill invoked | Purpose |
-| --- | --- | --- |
-| 2 | `triage-issue` | Structured triage with acceptance criteria |
-| 3 | `plan-issue` | Implementation plan with file-by-file changes |
-| 6 | `review-pr` | Code review against project conventions |
-| 6 | `design` | Design system compliance (if UI changed) |
+| Phase | Skill invoked | Parallel? | Purpose |
+| --- | --- | --- | --- |
+| 2 | `triage-issue` | Overlaps with codebase recon | Structured triage with acceptance criteria |
+| 3 | `plan-issue` | Overlaps with branch setup | Implementation plan with file-by-file changes |
+| 6 | `review-pr` | In parallel with `design` | Code review against project conventions |
+| 6 | `design` | In parallel with `review-pr` | Design system compliance (if UI changed) |
 
 ## Output
 
@@ -267,4 +382,5 @@ When the skill completes, summarise what was done:
 - Issue number and title.
 - PR number and link.
 - Summary of changes made.
+- How many sub-agents were used and for what.
 - Any open items or follow-ups noted during review.
