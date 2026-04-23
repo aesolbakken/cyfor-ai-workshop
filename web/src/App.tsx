@@ -1,10 +1,15 @@
 import { type FormEvent, useState } from "react";
 import {
   type Resource,
+  type Reservation,
   getGetResourcesQueryKey,
+  getGetResourcesIdReservationsQueryKey,
   useDeleteResourcesId,
+  useDeleteResourcesIdReservationsReservationId,
   useGetResources,
+  useGetResourcesIdReservations,
   usePostResources,
+  usePostResourcesIdReservations,
   usePutResourcesId,
 } from "./api";
 import { useQueryClient } from "@tanstack/react-query";
@@ -105,6 +110,170 @@ function ResourceForm({
   );
 }
 
+function ReservationForm({
+  resourceId,
+  onCreated,
+}: {
+  resourceId: number;
+  onCreated: () => void;
+}) {
+  const [reservedBy, setReservedBy] = useState("");
+  const [date, setDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+
+  const createMutation = usePostResourcesIdReservations({
+    mutation: {
+      onSuccess: () => {
+        setReservedBy("");
+        setDate("");
+        setStartTime("");
+        setEndTime("");
+        onCreated();
+      },
+    },
+  });
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmedName = reservedBy.trim();
+    if (!trimmedName || !date || !startTime || !endTime) return;
+    createMutation.mutate({
+      id: resourceId,
+      data: { reservedBy: trimmedName, date, startTime, endTime },
+    });
+  };
+
+  return (
+    <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
+      <input
+        value={reservedBy}
+        onChange={(e) => setReservedBy(e.target.value)}
+        placeholder="Your name"
+        maxLength={120}
+        className="border border-fv-green bg-white px-3 py-2 text-sm text-fv-black outline-none placeholder:text-fv-green focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
+      />
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+        className="border border-fv-green bg-white px-3 py-2 text-sm text-fv-black outline-none focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
+      />
+      <div className="flex gap-2">
+        <input
+          type="time"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+          className="flex-1 border border-fv-green bg-white px-3 py-2 text-sm text-fv-black outline-none focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
+        />
+        <span className="self-center text-sm text-fv-green">–</span>
+        <input
+          type="time"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+          className="flex-1 border border-fv-green bg-white px-3 py-2 text-sm text-fv-black outline-none focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
+        />
+      </div>
+      <button
+        type="submit"
+        disabled={
+          !reservedBy.trim() ||
+          !date ||
+          !startTime ||
+          !endTime ||
+          createMutation.isPending
+        }
+        className="bg-fv-black px-5 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {createMutation.isPending ? "Reserving..." : "Reserve"}
+      </button>
+      {createMutation.isError && (
+        <p className="text-sm text-fv-danger">
+          {createMutation.error.message}
+        </p>
+      )}
+    </form>
+  );
+}
+
+function ReservationItem({
+  reservation,
+  onDeleted,
+}: {
+  reservation: Reservation;
+  onDeleted: () => void;
+}) {
+  const deleteMutation = useDeleteResourcesIdReservationsReservationId({
+    mutation: { onSuccess: onDeleted },
+  });
+
+  return (
+    <li className="flex items-center justify-between gap-3 py-2">
+      <div className="min-w-0 flex-1 text-sm">
+        <span className="font-medium text-fv-black">
+          {reservation.date}
+        </span>{" "}
+        <span className="text-fv-green">
+          {reservation.startTime}–{reservation.endTime}
+        </span>{" "}
+        <span className="text-fv-black">— {reservation.reservedBy}</span>
+      </div>
+      <button
+        type="button"
+        onClick={() =>
+          deleteMutation.mutate({
+            id: reservation.resourceId,
+            reservationId: reservation.id,
+          })
+        }
+        disabled={deleteMutation.isPending}
+        className="shrink-0 border border-fv-green px-2 py-1 text-xs text-fv-black hover:border-fv-danger hover:text-fv-danger disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {deleteMutation.isPending ? "..." : "Cancel"}
+      </button>
+    </li>
+  );
+}
+
+function ReservationPanel({ resourceId }: { resourceId: number }) {
+  const queryClient = useQueryClient();
+  const reservationsQuery = useGetResourcesIdReservations(resourceId);
+  const reservations = reservationsQuery.data?.reservations ?? [];
+  const refresh = () =>
+    queryClient.invalidateQueries({
+      queryKey: getGetResourcesIdReservationsQueryKey(resourceId),
+    });
+
+  return (
+    <div className="mt-3 border-t border-fv-green-light pt-3">
+      <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-fv-black">
+        Reservations
+      </h3>
+      {reservationsQuery.isPending && (
+        <p className="text-sm text-fv-green">Loading…</p>
+      )}
+      {reservations.length > 0 ? (
+        <ul className="divide-y divide-fv-green-light">
+          {reservations.map((r) => (
+            <ReservationItem
+              key={r.id}
+              reservation={r}
+              onDeleted={refresh}
+            />
+          ))}
+        </ul>
+      ) : (
+        !reservationsQuery.isPending && (
+          <p className="mb-3 text-sm text-fv-green">No reservations yet.</p>
+        )
+      )}
+      <div className="mt-3">
+        <ReservationForm resourceId={resourceId} onCreated={refresh} />
+      </div>
+    </div>
+  );
+}
+
 function ResourceRow({
   resource,
   onDelete,
@@ -117,6 +286,7 @@ function ResourceRow({
   onUpdated: () => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [showReservations, setShowReservations] = useState(false);
   const updateMutation = usePutResourcesId({
     mutation: {
       onSuccess: () => {
@@ -153,37 +323,47 @@ function ResourceRow({
   }
 
   return (
-    <li className="flex items-start justify-between gap-3 py-3">
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-fv-black">{resource.title}</span>
-          <span className="bg-fv-green-light px-2 py-0.5 text-xs font-medium text-fv-black">
-            {resource.category}
-          </span>
+    <li className="py-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-fv-black">{resource.title}</span>
+            <span className="bg-fv-green-light px-2 py-0.5 text-xs font-medium text-fv-black">
+              {resource.category}
+            </span>
+          </div>
+          {resource.description && (
+            <p className="mt-0.5 text-sm text-fv-green">
+              {resource.description}
+            </p>
+          )}
         </div>
-        {resource.description && (
-          <p className="mt-0.5 text-sm text-fv-green">
-            {resource.description}
-          </p>
-        )}
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            onClick={() => setShowReservations(!showReservations)}
+            className="border border-fv-green px-3 py-1 text-sm text-fv-black hover:border-fv-black"
+          >
+            {showReservations ? "Hide" : "Reservations"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="border border-fv-green px-3 py-1 text-sm text-fv-black hover:border-fv-black"
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            disabled={isDeleting}
+            className="border border-fv-green px-3 py-1 text-sm text-fv-black hover:border-fv-danger hover:text-fv-danger disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {isDeleting ? "Removing..." : "Remove"}
+          </button>
+        </div>
       </div>
-      <div className="flex shrink-0 gap-2">
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="border border-fv-green px-3 py-1 text-sm text-fv-black hover:border-fv-black"
-        >
-          Edit
-        </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          disabled={isDeleting}
-          className="border border-fv-green px-3 py-1 text-sm text-fv-black hover:border-fv-danger hover:text-fv-danger disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {isDeleting ? "Removing..." : "Remove"}
-        </button>
-      </div>
+      {showReservations && <ReservationPanel resourceId={resource.id} />}
     </li>
   );
 }

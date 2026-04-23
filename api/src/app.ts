@@ -36,6 +36,38 @@ const UpdateResourceSchema = z.object({
   category: z.string().trim().min(1).max(60).optional().openapi({ example: 'Equipment' })
 }).openapi('UpdateResource')
 
+const ReservationSchema = z.object({
+  id: z.number().int().openapi({ example: 1 }),
+  resourceId: z.number().int().openapi({ example: 1 }),
+  reservedBy: z.string().openapi({ example: 'Ola Nordmann' }),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).openapi({ example: '2026-04-24' }),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/).openapi({ example: '09:00' }),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/).openapi({ example: '11:00' }),
+  createdAt: z.string().datetime().openapi({ example: '2024-01-01T00:00:00.000Z' }),
+  updatedAt: z.string().datetime().openapi({ example: '2024-01-01T00:00:00.000Z' })
+}).openapi('Reservation')
+
+const ReservationListResponseSchema = z.object({
+  reservations: z.array(ReservationSchema)
+}).openapi('ReservationListResponse')
+
+const CreateReservationSchema = z.object({
+  reservedBy: z.string().trim().min(1).max(120).openapi({ example: 'Ola Nordmann' }),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).openapi({ example: '2026-04-24' }),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/).openapi({ example: '09:00' }),
+  endTime: z.string().regex(/^\d{2}:\d{2}$/).openapi({ example: '11:00' })
+}).openapi('CreateReservation')
+
+const ReservationParamsSchema = z.object({
+  reservationId: z.coerce.number().int().positive().openapi({
+    param: {
+      name: 'reservationId',
+      in: 'path'
+    },
+    example: 1
+  })
+}).openapi('ReservationParams')
+
 const ResourceQuerySchema = z.object({
   search: z.string().optional().openapi({
     param: {
@@ -177,6 +209,98 @@ const deleteResourceRoute = createRoute({
   }
 })
 
+const listReservationsRoute = createRoute({
+  method: 'get',
+  path: '/resources/{id}/reservations',
+  tags: ['Reservations'],
+  request: {
+    params: ResourceParamsSchema
+  },
+  responses: {
+    200: {
+      description: 'List reservations for a resource',
+      content: {
+        'application/json': {
+          schema: ReservationListResponseSchema
+        }
+      }
+    },
+    404: {
+      description: 'Resource not found'
+    }
+  }
+})
+
+const createReservationRoute = createRoute({
+  method: 'post',
+  path: '/resources/{id}/reservations',
+  tags: ['Reservations'],
+  request: {
+    params: ResourceParamsSchema,
+    body: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: CreateReservationSchema
+        }
+      }
+    }
+  },
+  responses: {
+    201: {
+      description: 'Create a reservation',
+      content: {
+        'application/json': {
+          schema: ReservationSchema
+        }
+      }
+    },
+    404: {
+      description: 'Resource not found'
+    },
+    409: {
+      description: 'Time slot conflicts with an existing reservation'
+    },
+    400: {
+      description: 'Validation error (e.g. startTime >= endTime)'
+    }
+  }
+})
+
+const deleteReservationRoute = createRoute({
+  method: 'delete',
+  path: '/resources/{id}/reservations/{reservationId}',
+  tags: ['Reservations'],
+  request: {
+    params: ResourceParamsSchema.merge(ReservationParamsSchema)
+  },
+  responses: {
+    204: {
+      description: 'Delete a reservation'
+    }
+  }
+})
+
+const toReservationResponse = (reservation: {
+  id: number
+  resourceId: number
+  reservedBy: string
+  date: string
+  startTime: string
+  endTime: string
+  createdAt: Date
+  updatedAt: Date
+}) => ({
+  id: reservation.id,
+  resourceId: reservation.resourceId,
+  reservedBy: reservation.reservedBy,
+  date: reservation.date,
+  startTime: reservation.startTime,
+  endTime: reservation.endTime,
+  createdAt: reservation.createdAt.toISOString(),
+  updatedAt: reservation.updatedAt.toISOString()
+})
+
 const toResourceResponse = (resource: {
   id: number
   title: string
@@ -290,6 +414,80 @@ app.openapi(deleteResourceRoute, async (c) => {
   await prisma.resource.deleteMany({
     where: {
       id
+    }
+  })
+
+  return c.body(null, 204)
+})
+
+app.openapi(listReservationsRoute, async (c) => {
+  const { id } = c.req.valid('param')
+
+  const resource = await prisma.resource.findUnique({ where: { id } })
+  if (!resource) {
+    return c.body(null, 404)
+  }
+
+  const reservations = await prisma.reservation.findMany({
+    where: { resourceId: id },
+    orderBy: [{ date: 'asc' }, { startTime: 'asc' }]
+  })
+
+  return c.json({
+    reservations: reservations.map(toReservationResponse)
+  }, 200)
+})
+
+app.openapi(createReservationRoute, async (c) => {
+  const { id } = c.req.valid('param')
+  const { reservedBy, date, startTime, endTime } = c.req.valid('json')
+
+  if (startTime >= endTime) {
+    return c.json({ error: 'startTime must be before endTime' }, 400)
+  }
+
+  const resource = await prisma.resource.findUnique({ where: { id } })
+  if (!resource) {
+    return c.body(null, 404)
+  }
+
+  // Check for overlapping reservations: newStart < existingEnd AND newEnd > existingStart
+  const overlapping = await prisma.reservation.findFirst({
+    where: {
+      resourceId: id,
+      date,
+      startTime: { lt: endTime },
+      endTime: { gt: startTime }
+    }
+  })
+
+  if (overlapping) {
+    return c.json({
+      error: 'Time slot conflicts with an existing reservation',
+      conflictsWith: toReservationResponse(overlapping)
+    }, 409)
+  }
+
+  const reservation = await prisma.reservation.create({
+    data: {
+      resourceId: id,
+      reservedBy,
+      date,
+      startTime,
+      endTime
+    }
+  })
+
+  return c.json(toReservationResponse(reservation), 201)
+})
+
+app.openapi(deleteReservationRoute, async (c) => {
+  const { id, reservationId } = c.req.valid('param')
+
+  await prisma.reservation.deleteMany({
+    where: {
+      id: reservationId,
+      resourceId: id
     }
   })
 
