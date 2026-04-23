@@ -103,9 +103,9 @@ export interface Reservation {
   reservedBy: string;
   /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   date: string;
-  /** @pattern ^\d{2}:\d{2}$ */
+  /** @pattern ^\d{2}:\d{2}(:\d{2})?$ */
   startTime: string;
-  /** @pattern ^\d{2}:\d{2}$ */
+  /** @pattern ^\d{2}:\d{2}(:\d{2})?$ */
   endTime: string;
   createdAt: string;
   updatedAt: string;
@@ -123,9 +123,9 @@ export interface CreateReservation {
   reservedBy: string;
   /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   date: string;
-  /** @pattern ^\d{2}:\d{2}$ */
+  /** @pattern ^\d{2}:\d{2}(:\d{2})?$ */
   startTime: string;
-  /** @pattern ^\d{2}:\d{2}$ */
+  /** @pattern ^\d{2}:\d{2}(:\d{2})?$ */
   endTime: string;
 }
 

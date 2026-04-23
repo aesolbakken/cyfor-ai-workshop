@@ -41,8 +41,8 @@ const ReservationSchema = z.object({
   resourceId: z.number().int().openapi({ example: 1 }),
   reservedBy: z.string().openapi({ example: 'Ola Nordmann' }),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).openapi({ example: '2026-04-24' }),
-  startTime: z.string().regex(/^\d{2}:\d{2}$/).openapi({ example: '09:00' }),
-  endTime: z.string().regex(/^\d{2}:\d{2}$/).openapi({ example: '11:00' }),
+  startTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/).openapi({ example: '09:00' }),
+  endTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/).openapi({ example: '11:00' }),
   createdAt: z.string().datetime().openapi({ example: '2024-01-01T00:00:00.000Z' }),
   updatedAt: z.string().datetime().openapi({ example: '2024-01-01T00:00:00.000Z' })
 }).openapi('Reservation')
@@ -54,8 +54,8 @@ const ReservationListResponseSchema = z.object({
 const CreateReservationSchema = z.object({
   reservedBy: z.string().trim().min(1).max(120).openapi({ example: 'Ola Nordmann' }),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).openapi({ example: '2026-04-24' }),
-  startTime: z.string().regex(/^\d{2}:\d{2}$/).openapi({ example: '09:00' }),
-  endTime: z.string().regex(/^\d{2}:\d{2}$/).openapi({ example: '11:00' })
+  startTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/).openapi({ example: '09:00' }),
+  endTime: z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/).openapi({ example: '11:00' })
 }).openapi('CreateReservation')
 
 const ReservationParamsSchema = z.object({
