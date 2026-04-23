@@ -3,24 +3,27 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Forsvaret-inspired palette (see DESIGN.md) */
+  --color-fv-black: #191b21;
+  --color-fv-grey: #f5f7f8;
+  --color-fv-green-light: #f1f2f0;
+  --color-fv-green: #c6c7c4;
+  --color-fv-blue-light: #e2e6e9;
+  --color-fv-blue: #e6f3fd;
+  --color-fv-beige-light: #ede9e8;
+  --color-fv-beige: #e3ddd8;
+  --color-fv-focus: #5783a6;
+  --color-fv-danger: #b91c1c;
 }
 
 :root {
-  color-scheme: light dark;
-  color: #0f172a;
-  background-color: #f8fafc;
+  color-scheme: light;
+  color: #191b21;
+  background-color: #f5f7f8;
   font-family: var(--font-sans);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #e2e8f0;
-    background-color: #0f172a;
-  }
-
-  body {
-    background-color: #0f172a;
-  }
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 * {
@@ -37,5 +40,5 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f8fafc;
+  background-color: #f5f7f8;
 }

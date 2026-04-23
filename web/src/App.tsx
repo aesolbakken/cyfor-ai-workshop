@@ -62,7 +62,7 @@ function ResourceForm({
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Resource title"
         maxLength={120}
-        className="rounded-md border border-slate-300 px-3 py-2 text-base outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-400"
+        className="border border-fv-green bg-white px-3 py-2.5 text-base text-fv-black outline-none placeholder:text-fv-green focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
       />
       <textarea
         value={description}
@@ -70,12 +70,12 @@ function ResourceForm({
         placeholder="Description (optional)"
         maxLength={500}
         rows={2}
-        className="rounded-md border border-slate-300 px-3 py-2 text-base outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-400"
+        className="border border-fv-green bg-white px-3 py-2.5 text-base text-fv-black outline-none placeholder:text-fv-green focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
       />
       <select
         value={category}
         onChange={(e) => setCategory(e.target.value)}
-        className="rounded-md border border-slate-300 px-3 py-2 text-base outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-400"
+        className="border border-fv-green bg-white px-3 py-2.5 text-base text-fv-black outline-none focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
       >
         {CATEGORIES.map((cat) => (
           <option key={cat} value={cat}>
@@ -87,7 +87,7 @@ function ResourceForm({
         <button
           type="submit"
           disabled={!trimmedTitle || isPending}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300 dark:bg-slate-100 dark:text-slate-900 dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
+          className="bg-fv-black px-5 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isPending ? pendingLabel : submitLabel}
         </button>
@@ -95,7 +95,7 @@ function ResourceForm({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200"
+            className="border-2 border-fv-black px-5 py-2.5 text-sm font-medium text-fv-black"
           >
             Cancel
           </button>
@@ -144,7 +144,7 @@ function ResourceRow({
           onCancel={() => setEditing(false)}
         />
         {updateMutation.isError && (
-          <p className="mt-1 text-sm text-rose-600 dark:text-rose-400">
+          <p className="mt-1 text-sm text-fv-danger">
             Could not update: {updateMutation.error.message}
           </p>
         )}
@@ -156,13 +156,13 @@ function ResourceRow({
     <li className="flex items-start justify-between gap-3 py-3">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="font-medium">{resource.title}</span>
-          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          <span className="font-medium text-fv-black">{resource.title}</span>
+          <span className="bg-fv-green-light px-2 py-0.5 text-xs font-medium text-fv-black">
             {resource.category}
           </span>
         </div>
         {resource.description && (
-          <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-0.5 text-sm text-fv-green">
             {resource.description}
           </p>
         )}
@@ -171,7 +171,7 @@ function ResourceRow({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="rounded-md border border-slate-300 px-3 py-1 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-500"
+          className="border border-fv-green px-3 py-1 text-sm text-fv-black hover:border-fv-black"
         >
           Edit
         </button>
@@ -179,7 +179,7 @@ function ResourceRow({
           type="button"
           onClick={onDelete}
           disabled={isDeleting}
-          className="rounded-md border border-slate-300 px-3 py-1 text-sm text-slate-700 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-500 dark:disabled:border-slate-800 dark:disabled:text-slate-600"
+          className="border border-fv-green px-3 py-1 text-sm text-fv-black hover:border-fv-danger hover:text-fv-danger disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isDeleting ? "Removing..." : "Remove"}
         </button>
@@ -215,18 +215,18 @@ export default function App() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-      <div className="mx-auto max-w-xl space-y-6">
+    <main className="min-h-screen bg-fv-grey px-4 py-10 text-fv-black">
+      <div className="mx-auto max-w-xl space-y-8">
         <header className="space-y-2">
-          <h1 className="text-2xl font-semibold">Resources</h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <h1 className="text-3xl font-normal text-fv-black">Resources</h1>
+          <p className="text-sm text-fv-green">
             Manage your bookable resources — rooms, equipment, vehicles, and
             more.
           </p>
         </header>
 
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
-          <h2 className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+        <section className="border border-fv-green bg-white p-5">
+          <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-fv-black">
             Add resource
           </h2>
           <ResourceForm
@@ -238,19 +238,19 @@ export default function App() {
         </section>
 
         {createMutation.isError && (
-          <p className="text-sm text-rose-600 dark:text-rose-400">
+          <p className="text-sm text-fv-danger">
             Could not add the resource: {createMutation.error.message}
           </p>
         )}
 
         {deleteMutation.isError && (
-          <p className="text-sm text-rose-600 dark:text-rose-400">
+          <p className="text-sm text-fv-danger">
             Could not remove the resource: {deleteMutation.error.message}
           </p>
         )}
 
-        <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
-          <h2 className="text-sm font-medium text-slate-700 dark:text-slate-300">
+        <section className="border border-fv-green bg-white p-5">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-fv-black">
             Resources
           </h2>
 
@@ -259,24 +259,24 @@ export default function App() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search resources…"
-            className="mt-3 w-full rounded-md border border-slate-300 px-3 py-2 text-base outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-slate-400"
+            className="mt-4 w-full border border-fv-green bg-white px-3 py-2.5 text-base text-fv-black outline-none placeholder:text-fv-green focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
           />
 
           {resourcesQuery.isPending && (
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+            <p className="mt-3 text-sm text-fv-green">
               Loading resources...
             </p>
           )}
 
           {resourcesQuery.isError && (
-            <p className="mt-3 text-sm text-rose-600 dark:text-rose-400">
+            <p className="mt-3 text-sm text-fv-danger">
               Could not load resources: {resourcesQuery.error.message}
             </p>
           )}
 
           {!resourcesQuery.isPending && !resourcesQuery.isError ? (
             resources.length > 0 ? (
-              <ul className="mt-3 divide-y divide-slate-200 dark:divide-slate-800">
+              <ul className="mt-4 divide-y divide-fv-green-light">
                 {resources.map((resource) => (
                   <ResourceRow
                     key={resource.id}
@@ -290,7 +290,7 @@ export default function App() {
                 ))}
               </ul>
             ) : (
-              <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+              <p className="mt-3 text-sm text-fv-green">
                 No resources yet.
               </p>
             )
