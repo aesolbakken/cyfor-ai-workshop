@@ -1,0 +1,20 @@
+{
+  "$schema": "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers",
+  "_comment": "Template MCP config for the Cyfor AI Workshop. To activate, merge the contents of mcpServers into ~/.copilot/mcp-config.json (see README). Replace WORKSHOP_DB_PATH with the absolute path to api/data/workshop.db.",
+  "mcpServers": {
+    "playwright": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"],
+      "env": {},
+      "tools": ["*"]
+    },
+    "workshop-sqlite": {
+      "type": "local",
+      "command": "npx",
+      "args": ["-y", "mcp-server-sqlite-npx", "WORKSHOP_DB_PATH"],
+      "env": {},
+      "tools": ["*"]
+    }
+  }
+}

@@ -6,9 +6,21 @@
 }
 
 :root {
+  color-scheme: light dark;
   color: #0f172a;
   background-color: #f8fafc;
   font-family: var(--font-sans);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #e2e8f0;
+    background-color: #0f172a;
+  }
+
+  body {
+    background-color: #0f172a;
+  }
 }
 
 * {

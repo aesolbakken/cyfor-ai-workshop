@@ -42,26 +42,59 @@ export interface HealthResponse {
   status: HealthResponseStatus;
 }
 
-export interface Item {
+export interface Resource {
   id: number;
   /**
      * @minLength 1
      * @maxLength 120
      */
   title: string;
+  /** @nullable */
+  description: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  category: string;
   createdAt: string;
+  updatedAt: string;
 }
 
-export interface ItemListResponse {
-  items: Item[];
+export interface ResourceListResponse {
+  resources: Resource[];
 }
 
-export interface CreateItem {
+export interface CreateResource {
   /**
      * @minLength 1
      * @maxLength 120
      */
   title: string;
+  /** @maxLength 500 */
+  description?: string;
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  category: string;
+}
+
+export interface UpdateResource {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  title?: string;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  description?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 60
+     */
+  category?: string;
 }
 
 export const get = (
@@ -238,14 +271,14 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
 
 
 
-export const getItems = (
+export const getResources = (
 
  signal?: AbortSignal
 ) => {
 
 
-      return customClient<ItemListResponse>(
-      {url: `/items`, method: 'GET', signal
+      return customClient<ResourceListResponse>(
+      {url: `/resources`, method: 'GET', signal
     },
       );
     }
@@ -253,66 +286,66 @@ export const getItems = (
 
 
 
-export const getGetItemsQueryKey = () => {
+export const getGetResourcesQueryKey = () => {
     return [
-    `/items`
+    `/resources`
     ] as const;
     }
 
 
-export const getGetItemsQueryOptions = <TData = Awaited<ReturnType<typeof getItems>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItems>>, TError, TData>>, }
+export const getGetResourcesQueryOptions = <TData = Awaited<ReturnType<typeof getResources>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetItemsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetResourcesQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getItems>>> = ({ signal }) => getItems(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getResources>>> = ({ signal }) => getResources(signal);
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getItems>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetItemsQueryResult = NonNullable<Awaited<ReturnType<typeof getItems>>>
-export type GetItemsQueryError = ErrorType<unknown>
+export type GetResourcesQueryResult = NonNullable<Awaited<ReturnType<typeof getResources>>>
+export type GetResourcesQueryError = ErrorType<unknown>
 
 
-export function useGetItems<TData = Awaited<ReturnType<typeof getItems>>, TError = ErrorType<unknown>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItems>>, TError, TData>> & Pick<
+export function useGetResources<TData = Awaited<ReturnType<typeof getResources>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getItems>>,
+          Awaited<ReturnType<typeof getResources>>,
           TError,
-          Awaited<ReturnType<typeof getItems>>
+          Awaited<ReturnType<typeof getResources>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetItems<TData = Awaited<ReturnType<typeof getItems>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItems>>, TError, TData>> & Pick<
+export function useGetResources<TData = Awaited<ReturnType<typeof getResources>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getItems>>,
+          Awaited<ReturnType<typeof getResources>>,
           TError,
-          Awaited<ReturnType<typeof getItems>>
+          Awaited<ReturnType<typeof getResources>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetItems<TData = Awaited<ReturnType<typeof getItems>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItems>>, TError, TData>>, }
+export function useGetResources<TData = Awaited<ReturnType<typeof getResources>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetItems<TData = Awaited<ReturnType<typeof getItems>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getItems>>, TError, TData>>, }
+export function useGetResources<TData = Awaited<ReturnType<typeof getResources>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getResources>>, TError, TData>>, }
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetItemsQueryOptions(options)
+  const queryOptions = getGetResourcesQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -325,27 +358,27 @@ export function useGetItems<TData = Awaited<ReturnType<typeof getItems>>, TError
 
 
 
-export const postItems = (
-    createItem: CreateItem,
+export const postResources = (
+    createResource: CreateResource,
  signal?: AbortSignal
 ) => {
 
 
-      return customClient<Item>(
-      {url: `/items`, method: 'POST',
+      return customClient<Resource>(
+      {url: `/resources`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
-      data: createItem, signal
+      data: createResource, signal
     },
       );
     }
 
 
 
-export const getPostItemsMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postItems>>, TError,{data: CreateItem}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof postItems>>, TError,{data: CreateItem}, TContext> => {
+export const getPostResourcesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postResources>>, TError,{data: CreateResource}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postResources>>, TError,{data: CreateResource}, TContext> => {
 
-const mutationKey = ['postItems'];
+const mutationKey = ['postResources'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -355,10 +388,10 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postItems>>, {data: CreateItem}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postResources>>, {data: CreateResource}> = (props) => {
           const {data} = props ?? {};
 
-          return  postItems(data,)
+          return  postResources(data,)
         }
 
 
@@ -368,40 +401,99 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type PostItemsMutationResult = NonNullable<Awaited<ReturnType<typeof postItems>>>
-    export type PostItemsMutationBody = CreateItem
-    export type PostItemsMutationError = ErrorType<unknown>
+    export type PostResourcesMutationResult = NonNullable<Awaited<ReturnType<typeof postResources>>>
+    export type PostResourcesMutationBody = CreateResource
+    export type PostResourcesMutationError = ErrorType<unknown>
 
-    export const usePostItems = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postItems>>, TError,{data: CreateItem}, TContext>, }
+    export const usePostResources = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postResources>>, TError,{data: CreateResource}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof postItems>>,
+        Awaited<ReturnType<typeof postResources>>,
         TError,
-        {data: CreateItem},
+        {data: CreateResource},
         TContext
       > => {
-      return useMutation(getPostItemsMutationOptions(options), queryClient);
+      return useMutation(getPostResourcesMutationOptions(options), queryClient);
     }
 
-export const deleteItemsId = (
+export const putResourcesId = (
+    id: number,
+    updateResource: UpdateResource,
+ signal?: AbortSignal
+) => {
+
+
+      return customClient<Resource>(
+      {url: `/resources/${id}`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateResource, signal
+    },
+      );
+    }
+
+
+
+export const getPutResourcesIdMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putResourcesId>>, TError,{id: number;data: UpdateResource}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putResourcesId>>, TError,{id: number;data: UpdateResource}, TContext> => {
+
+const mutationKey = ['putResourcesId'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putResourcesId>>, {id: number;data: UpdateResource}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putResourcesId(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutResourcesIdMutationResult = NonNullable<Awaited<ReturnType<typeof putResourcesId>>>
+    export type PutResourcesIdMutationBody = UpdateResource
+    export type PutResourcesIdMutationError = ErrorType<void>
+
+    export const usePutResourcesId = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putResourcesId>>, TError,{id: number;data: UpdateResource}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putResourcesId>>,
+        TError,
+        {id: number;data: UpdateResource},
+        TContext
+      > => {
+      return useMutation(getPutResourcesIdMutationOptions(options), queryClient);
+    }
+
+export const deleteResourcesId = (
     id: number,
  signal?: AbortSignal
 ) => {
 
 
       return customClient<void>(
-      {url: `/items/${id}`, method: 'DELETE', signal
+      {url: `/resources/${id}`, method: 'DELETE', signal
     },
       );
     }
 
 
 
-export const getDeleteItemsIdMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteItemsId>>, TError,{id: number}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof deleteItemsId>>, TError,{id: number}, TContext> => {
+export const getDeleteResourcesIdMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteResourcesId>>, TError,{id: number}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof deleteResourcesId>>, TError,{id: number}, TContext> => {
 
-const mutationKey = ['deleteItemsId'];
+const mutationKey = ['deleteResourcesId'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -411,10 +503,10 @@ const {mutation: mutationOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteItemsId>>, {id: number}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteResourcesId>>, {id: number}> = (props) => {
           const {id} = props ?? {};
 
-          return  deleteItemsId(id,)
+          return  deleteResourcesId(id,)
         }
 
 
@@ -424,17 +516,17 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type DeleteItemsIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteItemsId>>>
+    export type DeleteResourcesIdMutationResult = NonNullable<Awaited<ReturnType<typeof deleteResourcesId>>>
 
-    export type DeleteItemsIdMutationError = ErrorType<unknown>
+    export type DeleteResourcesIdMutationError = ErrorType<unknown>
 
-    export const useDeleteItemsId = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteItemsId>>, TError,{id: number}, TContext>, }
+    export const useDeleteResourcesId = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteResourcesId>>, TError,{id: number}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof deleteItemsId>>,
+        Awaited<ReturnType<typeof deleteResourcesId>>,
         TError,
         {id: number},
         TContext
       > => {
-      return useMutation(getDeleteItemsIdMutationOptions(options), queryClient);
+      return useMutation(getDeleteResourcesIdMutationOptions(options), queryClient);
     }
