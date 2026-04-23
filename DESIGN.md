@@ -20,7 +20,9 @@ app, inspired by the Norwegian Armed Forces (Forsvaret) visual identity.
 1. **Nordic light** — large light surfaces, clean typography, simple
    monochrome icons, generous whitespace.
 2. **No artificial effects** — no drop shadows, no gradients, no
-   embossing, no rounded "pill" shapes. Keep it flat and honest.
+   embossing, no rounded "pill" shapes. Subtle rounding (`rounded-md`,
+   `rounded-lg`) is used to soften edges while keeping the flat, honest
+   aesthetic.
 3. **Colors in a subordinate role** — use sparingly. Most of the UI
    should be white/grey with small doses of accent color.
 4. **Controlled and calm** — the overall expression is trustworthy,
@@ -96,22 +98,22 @@ the font actually used in this project.
 
 ### Buttons
 
-- **Primary:** `bg-fv-black text-white` — rectangular (no border-radius or
-  very small `rounded-sm`), medium weight text.
+- **Primary:** `bg-fv-black text-white` — softly rounded (`rounded-md`),
+  medium weight text.
 - **Secondary:** transparent with `border-2 border-fv-black` — same
-  rectangular shape.
+  rounded shape.
 - **Destructive:** `text-fv-danger border-fv-danger`.
 - **Disabled:** reduced opacity (`opacity-40`), `cursor-not-allowed`.
-- No shadows. No gradients. No pill shapes.
+- No shadows. No gradients. No pill shapes (`rounded-full`).
 
 ```html
 <!-- Primary -->
-<button class="bg-fv-black px-5 py-2.5 text-sm font-medium text-white">
+<button class="rounded-md bg-fv-black px-5 py-2.5 text-sm font-medium text-white">
   Add resource
 </button>
 
 <!-- Secondary -->
-<button class="border-2 border-fv-black px-5 py-2.5 text-sm font-medium">
+<button class="rounded-md border-2 border-fv-black px-5 py-2.5 text-sm font-medium">
   Cancel
 </button>
 ```
@@ -120,24 +122,25 @@ the font actually used in this project.
 
 - Thin bottom border or full border in `fv-green` (muted).
 - On focus: `outline-2 outline-offset-2 outline-fv-focus`.
-- No rounded corners (or `rounded-sm` at most).
+- Softly rounded (`rounded-md`) to match buttons.
 - Placeholder text in muted green.
 
 ```html
-<input class="w-full border border-fv-green bg-white px-3 py-2.5 text-base
+<input class="w-full rounded-md border border-fv-green bg-white px-3 py-2.5 text-base
              outline-none focus:outline-2 focus:outline-offset-2
              focus:outline-fv-focus" />
 ```
 
 ### Cards / Sections
 
-- White background, thin `border border-fv-green`.
+- White background, thin `border border-fv-green`, softly rounded
+  (`rounded-lg`).
 - **No shadow** — flat is the rule.
 - Generous internal padding (`p-5` or `p-6`).
 - Section heading as uppercase label.
 
 ```html
-<section class="border border-fv-green bg-white p-5">
+<section class="rounded-lg border border-fv-green bg-white p-5">
   <h2 class="mb-4 text-xs font-bold uppercase tracking-widest text-fv-black">
     Add resource
   </h2>
@@ -149,11 +152,11 @@ the font actually used in this project.
 
 - Small, flat, muted backgrounds.
 - `bg-fv-green-light text-fv-black` or `bg-fv-blue-light text-fv-black`.
-- No rounded-full pill shape — use `rounded-sm` or none.
+- Subtly rounded (`rounded`) — no `rounded-full` pill shapes.
 - Text is small and may be uppercase.
 
 ```html
-<span class="bg-fv-green-light px-2 py-0.5 text-xs font-medium">
+<span class="rounded bg-fv-green-light px-2 py-0.5 text-xs font-medium">
   Equipment
 </span>
 ```
@@ -177,7 +180,7 @@ the font actually used in this project.
 | Keep colors muted and nature-inspired           | Use saturated primaries for large areas      |
 | Let whitespace create breathing room            | Cram elements together                       |
 | Use uppercase tracked labels for section heads  | Use large bold headings everywhere            |
-| Square/rectangular buttons                      | Pill-shaped (`rounded-full`) buttons          |
+| Softly rounded buttons (`rounded-md`)           | Pill-shaped (`rounded-full`) buttons          |
 | Thin muted borders (`border-fv-green`)          | Thick colorful borders                       |
 | Focus rings with `fv-focus` blue               | Browser-default focus outlines               |
 | Light mode only                                 | Dark mode (conflicts with Nordic light theme) |

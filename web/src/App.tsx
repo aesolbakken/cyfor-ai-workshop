@@ -67,7 +67,7 @@ function ResourceForm({
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Resource title"
         maxLength={120}
-        className="border border-fv-green bg-white px-3 py-2.5 text-base text-fv-black outline-none placeholder:text-fv-green focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
+        className="rounded-md border border-fv-green bg-white px-3 py-2.5 text-base text-fv-black outline-none placeholder:text-fv-green focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
       />
       <textarea
         value={description}
@@ -75,12 +75,12 @@ function ResourceForm({
         placeholder="Description (optional)"
         maxLength={500}
         rows={2}
-        className="border border-fv-green bg-white px-3 py-2.5 text-base text-fv-black outline-none placeholder:text-fv-green focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
+        className="rounded-md border border-fv-green bg-white px-3 py-2.5 text-base text-fv-black outline-none placeholder:text-fv-green focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
       />
       <select
         value={category}
         onChange={(e) => setCategory(e.target.value)}
-        className="border border-fv-green bg-white px-3 py-2.5 text-base text-fv-black outline-none focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
+        className="rounded-md border border-fv-green bg-white px-3 py-2.5 text-base text-fv-black outline-none focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
       >
         {CATEGORIES.map((cat) => (
           <option key={cat} value={cat}>
@@ -92,7 +92,7 @@ function ResourceForm({
         <button
           type="submit"
           disabled={!trimmedTitle || isPending}
-          className="bg-fv-black px-5 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-md bg-fv-black px-5 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isPending ? pendingLabel : submitLabel}
         </button>
@@ -100,7 +100,7 @@ function ResourceForm({
           <button
             type="button"
             onClick={onCancel}
-            className="border-2 border-fv-black px-5 py-2.5 text-sm font-medium text-fv-black"
+            className="rounded-md border-2 border-fv-black px-5 py-2.5 text-sm font-medium text-fv-black"
           >
             Cancel
           </button>
@@ -151,27 +151,27 @@ function ReservationForm({
         onChange={(e) => setReservedBy(e.target.value)}
         placeholder="Your name"
         maxLength={120}
-        className="border border-fv-green bg-white px-3 py-2 text-sm text-fv-black outline-none placeholder:text-fv-green focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
+        className="rounded-md border border-fv-green bg-white px-3 py-2 text-sm text-fv-black outline-none placeholder:text-fv-green focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
       />
       <input
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
-        className="border border-fv-green bg-white px-3 py-2 text-sm text-fv-black outline-none focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
+        className="rounded-md border border-fv-green bg-white px-3 py-2 text-sm text-fv-black outline-none focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
       />
       <div className="flex gap-2">
         <input
           type="time"
           value={startTime}
           onChange={(e) => setStartTime(e.target.value)}
-          className="flex-1 border border-fv-green bg-white px-3 py-2 text-sm text-fv-black outline-none focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
+          className="flex-1 rounded-md border border-fv-green bg-white px-3 py-2 text-sm text-fv-black outline-none focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
         />
         <span className="self-center text-sm text-fv-green">–</span>
         <input
           type="time"
           value={endTime}
           onChange={(e) => setEndTime(e.target.value)}
-          className="flex-1 border border-fv-green bg-white px-3 py-2 text-sm text-fv-black outline-none focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
+          className="flex-1 rounded-md border border-fv-green bg-white px-3 py-2 text-sm text-fv-black outline-none focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
         />
       </div>
       <button
@@ -183,7 +183,7 @@ function ReservationForm({
           !endTime ||
           createMutation.isPending
         }
-        className="bg-fv-black px-5 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-md bg-fv-black px-5 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
       >
         {createMutation.isPending ? "Reserving..." : "Reserve"}
       </button>
@@ -227,7 +227,7 @@ function ReservationItem({
           })
         }
         disabled={deleteMutation.isPending}
-        className="shrink-0 border border-fv-green px-2 py-1 text-xs text-fv-black hover:border-fv-danger hover:text-fv-danger disabled:cursor-not-allowed disabled:opacity-40"
+        className="shrink-0 rounded-md border border-fv-green px-2 py-1 text-xs text-fv-black hover:border-fv-danger hover:text-fv-danger disabled:cursor-not-allowed disabled:opacity-40"
       >
         {deleteMutation.isPending ? "..." : "Cancel"}
       </button>
@@ -328,7 +328,7 @@ function ResourceRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="font-medium text-fv-black">{resource.title}</span>
-            <span className="bg-fv-green-light px-2 py-0.5 text-xs font-medium text-fv-black">
+            <span className="rounded bg-fv-green-light px-2 py-0.5 text-xs font-medium text-fv-black">
               {resource.category}
             </span>
           </div>
@@ -342,14 +342,14 @@ function ResourceRow({
           <button
             type="button"
             onClick={() => setShowReservations(!showReservations)}
-            className="border border-fv-green px-3 py-1 text-sm text-fv-black hover:border-fv-black"
+            className="rounded-md border border-fv-green px-3 py-1 text-sm text-fv-black hover:border-fv-black"
           >
             {showReservations ? "Hide" : "Reservations"}
           </button>
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="border border-fv-green px-3 py-1 text-sm text-fv-black hover:border-fv-black"
+            className="rounded-md border border-fv-green px-3 py-1 text-sm text-fv-black hover:border-fv-black"
           >
             Edit
           </button>
@@ -357,7 +357,7 @@ function ResourceRow({
             type="button"
             onClick={onDelete}
             disabled={isDeleting}
-            className="border border-fv-green px-3 py-1 text-sm text-fv-black hover:border-fv-danger hover:text-fv-danger disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md border border-fv-green px-3 py-1 text-sm text-fv-black hover:border-fv-danger hover:text-fv-danger disabled:cursor-not-allowed disabled:opacity-40"
           >
             {isDeleting ? "Removing..." : "Remove"}
           </button>
@@ -405,7 +405,7 @@ export default function App() {
           </p>
         </header>
 
-        <section className="border border-fv-green bg-white p-5">
+        <section className="rounded-lg border border-fv-green bg-white p-5">
           <h2 className="mb-4 text-xs font-bold uppercase tracking-widest text-fv-black">
             Add resource
           </h2>
@@ -429,7 +429,7 @@ export default function App() {
           </p>
         )}
 
-        <section className="border border-fv-green bg-white p-5">
+        <section className="rounded-lg border border-fv-green bg-white p-5">
           <h2 className="text-xs font-bold uppercase tracking-widest text-fv-black">
             Resources
           </h2>
@@ -439,7 +439,7 @@ export default function App() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search resources…"
-            className="mt-4 w-full border border-fv-green bg-white px-3 py-2.5 text-base text-fv-black outline-none placeholder:text-fv-green focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
+            className="mt-4 w-full rounded-md border border-fv-green bg-white px-3 py-2.5 text-base text-fv-black outline-none placeholder:text-fv-green focus:outline-2 focus:outline-offset-2 focus:outline-fv-focus"
           />
 
           {resourcesQuery.isPending && (
